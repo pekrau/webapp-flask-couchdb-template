@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block head_title %}Software{% endblock %}
+{% block body_title %}Software{% endblock %}
+
+{% block main %}
+<table class="table">
+  <tr>
+    <th>Software</th>
+    <th>Version</th>
+    <th>Link</th>
+  </tr>
+  {% for software, version, url in softwares %}
+  <tr>
+    <td>{{ software }}</td>
+    <td>{{ version }}</td>
+    <td><a href="{{ url }}">{{ url }}</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %} {# block main #}
+
