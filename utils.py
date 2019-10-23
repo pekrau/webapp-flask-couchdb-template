@@ -5,10 +5,10 @@ import http.client
 import time
 import uuid
 
+import couchdb2
 import flask
 import flask_mail
 import jinja2.utils
-import pymongo
 import werkzeug.routing
 
 import constants
@@ -44,16 +44,19 @@ class Timer:
         "Return CPU time (in milliseconds) since start of this timer."
         return round(1000 * self())
 
+def get_dbserver():
+    "Get the connection to the CouchDB database server."
+    return couchdb2.Server(
+        href=flask.current_app.config['COUCHDB_URL'],
+        username=flask.current_app.config['COUCHDB_USERNAME'],
+        password=flask.current_app.config['COUCHDB_PASSWORD'])
 
-def mongo_connect():
-    "Set the connection to the MongoDB database server and databases."
-    flask.g.mongo = pymongo.MongoClient(
-        host=flask.current_app.config['MONGODB_HOST'],
-        port=flask.current_app.config['MONGODB_PORT'],
-        username=flask.current_app.config['MONGODB_USERNAME'],
-        password=flask.current_app.config['MONGODB_PASSWORD'])
-    flask.g.db = flask.g.mongo[flask.current_app.config['MONGODB_DBNAME']]
-    
+def get_db(dbserver):
+    return dbserver[flask.current_app.config['COUCHDB_DBNAME']]
+
+def init_db(server, db):
+    "Init or update the CouchDB database setup: view indices."
+    raise NotImplementedError
 
 def get_iuid():
     "Return a new IUID, which is a UUID4 pseudo-random string."

@@ -1,7 +1,6 @@
 "Web app template. With user account handling."
 
 import flask
-import pymongo
 
 import config
 import constants
@@ -22,6 +21,9 @@ config.init(app)
 assert app.config['SECRET_KEY']
 assert app.config['SALT_LENGTH'] > 6
 assert app.config['MIN_PASSWORD_LENGTH'] > 4
+
+# Init or update the CouchDB database setup: view indices.
+utils.init_db(app)
 
 # Init the mail handler.
 utils.mail.init_app(app)
@@ -44,16 +46,11 @@ def setup_template_context():
 @app.before_request
 def prepare():
     "Open the database connection; get the current user."
-    utils.mongo_connect()
+    flask.g.dbserver = utils.get_dbserver()
+    flask.g.db = utils.get_db(flask.g.dbserver)
     flask.g.current_user = user.get_current_user()
     flask.g.is_admin = flask.g.current_user and \
                        flask.g.current_user['role'] == constants.ADMIN
-
-@app.after_request
-def finalize(response):
-    "Close the database connection."
-    flask.g.mongo.close()
-    return response
 
 @app.route('/')
 def home():
