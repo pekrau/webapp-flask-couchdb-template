@@ -4,14 +4,15 @@ import getpass
 
 import flask
 
-import constants
 import webapp
+import constants
 import user
 import utils
 
 
 with webapp.app.app_context():
-    utils.mongo_connect()
+    flask.g.db = utils.get_db()
+    utils.update_designs()
     with user.UserContext() as ctx:
         ctx.set_username(input('username > '))
         ctx.set_email(input('email > '))

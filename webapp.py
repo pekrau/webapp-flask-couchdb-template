@@ -1,5 +1,7 @@
 "Web app template. With user account handling."
 
+import logging
+
 import flask
 
 import config
@@ -11,6 +13,11 @@ import user
 import api_schema
 import api_user
 
+logger = logging.getLogger('webapp')
+loghandler = logging.StreamHandler()
+loghandler.setFormatter(
+    logging.Formatter('%(levelname)-10s %(asctime)s %(message)s'))
+logger.addHandler(loghandler)
 
 app = flask.Flask(__name__)
 app.url_map.converters['name'] = utils.NameConverter
@@ -21,9 +28,6 @@ config.init(app)
 assert app.config['SECRET_KEY']
 assert app.config['SALT_LENGTH'] > 6
 assert app.config['MIN_PASSWORD_LENGTH'] > 4
-
-# Init or update the CouchDB database setup: view indices.
-utils.init_db(app)
 
 # Init the mail handler.
 utils.mail.init_app(app)
@@ -43,11 +47,15 @@ def setup_template_context():
     return dict(constants=constants,
                 csrf_token=utils.csrf_token)
 
+@app.before_first_request
+def init_database():
+    utils.update_designs()
+
 @app.before_request
 def prepare():
     "Open the database connection; get the current user."
     flask.g.dbserver = utils.get_dbserver()
-    flask.g.db = utils.get_db(flask.g.dbserver)
+    flask.g.db = utils.get_db(dbserver=flask.g.dbserver)
     flask.g.current_user = user.get_current_user()
     flask.g.is_admin = flask.g.current_user and \
                        flask.g.current_user['role'] == constants.ADMIN

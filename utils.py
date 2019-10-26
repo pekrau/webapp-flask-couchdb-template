@@ -2,6 +2,7 @@
 
 import datetime
 import http.client
+import logging
 import time
 import uuid
 
@@ -13,6 +14,7 @@ import werkzeug.routing
 
 import constants
 
+logger = logging.getLogger('webapp')
 
 # Global instance of mail interface.
 mail = flask_mail.Mail()
@@ -43,24 +45,6 @@ class Timer:
     def milliseconds(self):
         "Return CPU time (in milliseconds) since start of this timer."
         return round(1000 * self())
-
-def get_dbserver():
-    "Get the connection to the CouchDB database server."
-    return couchdb2.Server(
-        href=flask.current_app.config['COUCHDB_URL'],
-        username=flask.current_app.config['COUCHDB_USERNAME'],
-        password=flask.current_app.config['COUCHDB_PASSWORD'])
-
-def get_db(dbserver):
-    return dbserver[flask.current_app.config['COUCHDB_DBNAME']]
-
-def init_db(server, db):
-    """Init or update the CouchDB database setup: view indices.
-    This does not create the database, or set its access properties;
-    this has to be done 'manually'.
-    """
-    raise NotImplementedError
-
 def get_iuid():
     "Return a new IUID, which is a UUID4 pseudo-random string."
     return uuid.uuid4().hex
@@ -168,3 +152,84 @@ def jsonify(result, schema=None):
         url = flask.current_app.config['SCHEMA_BASE_URL']
         response.headers.add('Link', f"<{url}{schema}>", rel='schema')
     return response
+
+
+def get_dbserver(app=None):
+    "Get the connection to the CouchDB database server."
+    if app is None:
+        app = flask.current_app
+    return couchdb2.Server(href=app.config['COUCHDB_URL'],
+                           username=app.config['COUCHDB_USERNAME'],
+                           password=app.config['COUCHDB_PASSWORD'])
+
+def get_db(dbserver=None, app=None):
+    if app is None:
+        app = flask.current_app
+    if dbserver is None:
+        dbserver = get_dbserver(app=app)
+    return dbserver[app.config['COUCHDB_DBNAME']]
+
+def add_log_entry(current, original, hide=[]):
+    """Add a log entry recording the the difference betweens the current and
+    the original documents, optionally hiding the values of the some keys.
+    'added': list of keys for items added in the current.
+    'updated': dictionary of items updated; original values.
+    'removed': dictionary of items removed; original values.
+    """
+    added = list(set(current).difference(original or {}))
+    updated = dict([(k, original[k])
+                    for k in set(current).intersection(original or {})
+                    if current[k] != original[k]])
+    removed = dict([(k, original[k])
+                    for k in set(original or {}).difference(current)])
+    for key in ['_id', '_rev', 'modified']:
+        try:
+            added.remove(key)
+        except ValueError:
+            pass
+    updated.pop('_rev', None)
+    updated.pop('modified', None)
+    for key in hide:
+        if key in updated:
+            updated[key] = '***'
+        if key in removed:
+            removed[key] = '***'
+    entry = {'_id': get_iuid(),
+             'doctype': constants.DOCTYPE_LOG,
+             'docid': current['_id'],
+             'added': added,
+             'updated': updated,
+             'removed': removed,
+             'timestamp': get_time()}
+    try:
+        entry['username'] = flask.g.current_user['username']
+    except (AttributeError, KeyError):
+        entry['username'] = None
+    if flask.has_request_context():
+        entry['remote_addr'] = str(flask.request.remote_addr)
+        entry['user_agent'] = str(flask.request.user_agent)
+    else:
+        entry['remote_addr'] = None
+        entry['user_agent'] = None
+    flask.g.db.put(entry)
+
+def update_designs():
+    "Update the CouchDB database design document (view indices)."
+    for name, doc in DESIGNS.items():
+        if flask.g.db.put_design(name, doc):
+            logger.info(f"Updated design document '{name}'.")
+
+DESIGNS = {
+    'users': {
+        'views': {
+            'username': {'map': "function (doc) {if (doc.doctype !== 'user') return; emit(doc.username, null);}"},
+            'email': {'map': "function (doc) {if (doc.doctype !== 'user') return;  emit(doc.email, null);}"},
+            'apikey': {'map': "function (doc) {if (doc.doctype !== 'user') return;  emit(doc.apikey, null);}"},
+        }
+    },
+    'logs': {
+        'views': {
+            'doc': {'map': "function (doc) {if (doc.doctype !== 'log') return; emit([doc.docid, doc.timestamp], null);}"}
+        }
+    }
+}

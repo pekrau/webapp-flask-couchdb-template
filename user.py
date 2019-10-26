@@ -3,6 +3,7 @@
 import functools
 import http.client
 import json
+import logging
 import re
 
 import flask
@@ -12,6 +13,7 @@ import werkzeug.security
 import constants
 import utils
 
+logger = logging.getLogger('webapp')
 
 # Decorators
 
@@ -271,12 +273,13 @@ class UserContext:
             else:
                 status = constants.PENDING
             self.user = {'_id': utils.get_iuid(),
+                         'doctype': constants.DOCTYPE_USER,
                          'status': status, 
                          'created': utils.get_time()}
-            self.orig = {}
+            self.original = {}
         else:
             self.user = user
-            self.orig = user.copy()
+            self.original = user.copy()
 
     def __enter__(self):
         return self
@@ -287,41 +290,8 @@ class UserContext:
             if not self.user.get(key):
                 raise ValueError("invalid user: %s not set" % key)
         self.user['modified'] = utils.get_time()
-        
-        # Insert or update user entry.
-        coll = flask.g.db['users']
-        coll.replace_one({'_id': self.user['_id']}, self.user, upsert=True)
-
-        # Add log entry.
-        new = {}
-        for key, value in self.user.items():
-            if value != self.orig.get(key):
-                new[key] = value
-        # Trivially always different; skip.
-        new.pop('modified')
-        # Do not show new password.
-        try:
-            password = new['password']
-        except KeyError:
-            pass
-        else:
-            if not password.startswith('code:'):
-                new['password'] = '***'
-        entry = {'_id': utils.get_iuid(), 
-                 'username': self.user['username'],
-                 'new': new,
-                 'timestamp': utils.get_time()}
-        if hasattr(flask.g, 'current_user') and flask.g.current_user:
-            entry['editor'] = flask.g.current_user['username']
-        else:
-            entry['editor'] = None
-        if flask.has_request_context():
-            entry['remote_addr'] = str(flask.request.remote_addr)
-            entry['user_agent'] = str(flask.request.user_agent)
-        else:
-            entry['remote_addr'] = None
-            entry['user_agent'] = None
-        flask.g.db['user_logs'].insert_one(entry)
+        flask.g.db.put(self.user)
+        utils.add_log_entry(self.user, self.original, hide=['password'])
 
     def set_username(self, username):
         if 'username' in self.user:
@@ -376,16 +346,27 @@ def get_user(username=None, email=None, apikey=None):
     """Return the user for the given username, email or apikey.
     Return None if no such user.
     """
-    coll = flask.g.db['users']
     if username:
-        user = coll.find_one({'username': username})
-        if user: return user
+        try:
+            user = flask.g.db.view('users', 'username', key=username)
+        except couchdb2.NotFoundError:
+            pass
+        else:
+            return user
     if email:
-        user = coll.find_one({'email': email})
-        if user: return user
+        try:
+            user = flask.g.db.view('users', 'email', key=email)
+        except couchdb2.NotFoundError:
+            pass
+        else:
+            return user
     if apikey:
-        user = coll.find_one({'apikey': apikey})
-        if user: return user
+        try:
+            user = flask.g.db.view('users', 'apikey', key=apikey)
+        except couchdb2.NotFoundError:
+            pass
+        else:
+            return user
     return None
 
 def get_current_user():
@@ -403,7 +384,7 @@ def do_login(username, password):
     """Set the session cookie if successful login.
     Raise ValueError if some problem.
     """
-    user = get_user(username)
+    user = get_user(username=username)
     if user is None: raise ValueError
     if not werkzeug.security.check_password_hash(user['password'], password):
         raise ValueError
@@ -425,7 +406,7 @@ def send_password_code(user, action):
 
 def is_empty(user):
     "Is the given user account empty? No data associated with it."
-    # XXX Need reimplementation.
+    # XXX Needs reimplementation.
     return True
 
 def is_admin_or_self(user):

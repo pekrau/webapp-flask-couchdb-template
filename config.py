@@ -1,11 +1,13 @@
 "Configuration."
 
+import logging
 import os
 import os.path
 
 import constants
 import utils
 
+logger = logging.getLogger('webapp')
 
 ROOT_DIRPATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -13,6 +15,7 @@ ROOT_DIRPATH = os.path.dirname(os.path.abspath(__file__))
 CONFIG = dict(
     SERVER_NAME = '127.0.0.1:5002',
     SITE_NAME = 'webapp',
+    DEBUG = False,
     SECRET_KEY = None,          # Must be set in 'config.json'
     SALT_LENGTH = 12,
     COUCHDB_URL = 'http://127.0.0.1:5984/',
@@ -31,14 +34,7 @@ CONFIG = dict(
     MAIL_DEFAULT_SENDER = None,
     USER_ENABLE_IMMEDIATELY = False,
     USER_ENABLE_EMAIL_WHITELIST = [], # List of regexp's
-    SCHEMA_BASE_URL = 'http://127.0.0.1:5002/api/schema',
-    # BOOTSTRAP_CSS_ATTRS = 'href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"',
-    # JQUERY_JS_ATTRS = 'src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"',
-    # POPPER_JS_ATTRS = 'src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"',
-    # BOOTSTRAP_JS_ATTRS = 'src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"',
-    # DATATABLES_CSS_URL = 'https://cdn.datatables.net/1.10.18/css/dataTables.bootstrap4.min.css',
-    # DATATABLES_JS_URL = 'https://cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js',
-    # DATATABLES_BOOTSTRAP_JS_URL = 'https://cdn.datatables.net/1.10.18/js/dataTables.bootstrap4.min.js'
+    SCHEMA_BASE_URL = 'http://127.0.0.1:5002/api/schema'
 )
 
 def init(app):
@@ -46,6 +42,7 @@ def init(app):
     Set the defaults, and then read JSON config file.
     Check the environment for a specific set of variables and use if defined.
     """
+    messages = []
     # Set the defaults specified above.
     app.config.from_mapping(CONFIG)
     # Modify the configuration from a JSON config file.
@@ -62,8 +59,9 @@ def init(app):
                 filepath = None
             else:
                 break
+
     if filepath:
-        print(' > Configuration file:', filepath)
+        messages.append(f"Configuration file: {filepath}")
     for key, convert in [('SECRET_KEY', str),
                          ('COUCHDB_URL', str),
                          ('COUCHDB_USERNAME', str),
@@ -73,10 +71,15 @@ def init(app):
                          ('MAIL_USE_TLS', utils.to_bool),
                          ('MAIL_USERNAME', str),
                          ('MAIL_PASSWORD', str),
-                         ('MAIL_DEFAULT_SENDER', str),
-    ]:
+                         ('MAIL_DEFAULT_SENDER', str)]:
         try:
             app.config[key] = convert(os.environ[key])
-            print(' > From environment:', key)
+            messages.append(f"Configuration {key} from environment")
         except (KeyError, TypeError, ValueError):
             pass
+    if app.config['DEBUG']:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.WARNING)
+    for message in messages:
+        logger.info(message)
