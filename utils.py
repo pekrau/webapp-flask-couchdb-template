@@ -55,7 +55,10 @@ def get_db(dbserver):
     return dbserver[flask.current_app.config['COUCHDB_DBNAME']]
 
 def init_db(server, db):
-    "Init or update the CouchDB database setup: view indices."
+    """Init or update the CouchDB database setup: view indices.
+    This does not create the database, or set its access properties;
+    this has to be done 'manually'.
+    """
     raise NotImplementedError
 
 def get_iuid():
