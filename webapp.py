@@ -68,7 +68,8 @@ def home():
     "Home page. Redirect to API root if JSON accepted."
     if utils.accept_json():
         return flask.redirect(flask.url_for('api_root'))
-    return flask.render_template('home.html')
+    else:
+        return flask.render_template('home.html')
 
 @app.route('/api')
 def api_root():
@@ -76,7 +77,9 @@ def api_root():
     items = {
         'schema': {
             'root': {'href': utils.url_for('api_schema.root')},
-            'user': {'href': utils.url_for('api_schema.user')}
+            'logs': {'href': utils.url_for('api_schema.logs')},
+            'user': {'href': utils.url_for('api_schema.user')},
+            'about/software': {'href': utils.url_for('api_schema.about_software')}
         },
         'about': {
             'software': {'href': utils.url_for('api_about.software')}

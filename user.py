@@ -229,7 +229,8 @@ def logs(username):
         'logs.html',
         title=f"User {user['username']}",
         cancel_url=flask.url_for('.profile', username=user['username']),
-        logs=utils.get_log_entries(user['_id']))
+        api_logs_url=flask.url_for('api_user.logs', username=user['username']),
+        logs=utils.get_logs(user['_id']))
 
 @blueprint.route('/all')
 @admin_required
@@ -293,7 +294,7 @@ class UserContext:
                 raise ValueError("invalid user: %s not set" % key)
         self.user['modified'] = utils.get_time()
         flask.g.db.put(self.user)
-        utils.add_log_entry(self.user, self.original, hide=['password'])
+        utils.add_log(self.user, self.original, hide=['password'])
 
     def set_username(self, username):
         if 'username' in self.user:

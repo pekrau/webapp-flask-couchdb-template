@@ -170,7 +170,7 @@ def get_db(dbserver=None, app=None):
         dbserver = get_dbserver(app=app)
     return dbserver[app.config['COUCHDB_DBNAME']]
 
-def add_log_entry(current, original, hide=[]):
+def add_log(current, original, hide=[]):
     """Add a log entry recording the the difference betweens the current and
     the original documents, optionally hiding the values of the some keys.
     'added': list of keys for items added in the current.
@@ -214,15 +214,20 @@ def add_log_entry(current, original, hide=[]):
         entry['user_agent'] = None
     flask.g.db.put(entry)
 
-def get_log_entries(docid):
+def get_logs(docid):
     """Return the list of log entries for the given document identifier,
     sorted by reverse timestamp.
     """
-    return [r.doc for r in flask.g.db.view('logs', 'doc',
-                                           startkey=[docid, 'ZZZZZZ'],
-                                           endkey=[docid],
-                                           descending=True,
-                                           include_docs=True)]
+    result = [r.doc for r in flask.g.db.view('logs', 'doc',
+                                             startkey=[docid, 'ZZZZZZ'],
+                                             endkey=[docid],
+                                             descending=True,
+                                             include_docs=True)]
+    # Remove irrelevant entries.
+    for log in result:
+        for key in ['_id', '_rev', 'doctype', 'docid']:
+            log.pop(key)
+    return result
 
 def update_designs():
     "Update the CouchDB database design document (view indices)."

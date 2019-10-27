@@ -18,6 +18,51 @@ ROOT = {
     ]
 }
 
+LOGS = {
+    'type': 'object',
+    'properties': {
+        '$id': _URI,
+        'timestamp': _DATETIME,
+        'doc': {
+            'type': 'object',
+            'properties': {
+                'iuid': {'type': 'string'},
+                'href': _URI
+            },
+            'required': [
+                'iuid',
+                'href'
+            ],
+            'additionalProperties': False
+        },
+        'logs': {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'added': {'type': 'array'},
+                    'updated': {'type': 'object'},
+                    'removed': {'type': 'object'},
+                    'timestamp': _DATETIME,
+                    'username': {'type': ['string', 'null']},
+                    'remote_addr': {'type': ['string', 'null']},
+                    'user_agentr': {'type': ['string', 'null']}
+                },
+                'required': [
+                    'added',
+                    'updated',
+                    'removed',
+                    'timestamp',
+                    'username',
+                    'remote_addr',
+                    'user_agentr'
+                ],
+                'additionalProperties': False
+            }
+        }
+    }
+}
+
 ABOUT_SOFTWARE = {
     'type': 'object',
     'properties': {
@@ -54,7 +99,15 @@ USER = {
         'role': {'type': 'string', 'enum': ['admin', 'user']},
         'status': {'type': 'string', 'enum': ['pending', 'enabled', 'disabled']},
         'created': _DATETIME,
-        'modified': _DATETIME
+        'modified': _DATETIME,
+        'logs': {
+            'type': 'object',
+            'properties': {
+                'href': _URI
+            },
+            'required': ['href'],
+            'additionalProperties': False
+        }
     },
     'required': [
         '$id',
@@ -65,7 +118,8 @@ USER = {
         'role',
         'status',
         'created',
-        'modified'
+        'modified',
+        'logs'
     ],
     'additionalProperties': False
 }
@@ -98,14 +152,18 @@ USERS = {
 
 blueprint = flask.Blueprint('api_schema', __name__)
 
-@blueprint.route('/root', methods=['GET'])
+@blueprint.route('/root')
 def root():
     return flask.jsonify(ROOT)
 
-@blueprint.route('/about/software', methods=['GET'])
+@blueprint.route('/logs')
+def logs():
+    return flask.jsonify(LOGS)
+
+@blueprint.route('/about/software')
 def about_software():
     return flask.jsonify(ABOUT_SOFTWARE)
 
-@blueprint.route('/user', methods=['GET'])
+@blueprint.route('/user')
 def user():
     return flask.jsonify(USER)
