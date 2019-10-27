@@ -10,6 +10,7 @@ import utils
 
 import about
 import user
+import api_about
 import api_schema
 import api_user
 
@@ -35,6 +36,7 @@ utils.mail.init_app(app)
 # Set up the URL map.
 app.register_blueprint(about.blueprint, url_prefix='/about')
 app.register_blueprint(user.blueprint, url_prefix='/user')
+app.register_blueprint(api_about.blueprint, url_prefix='/api/about')
 app.register_blueprint(api_schema.blueprint, url_prefix='/api/schema')
 app.register_blueprint(api_user.blueprint, url_prefix='/api/user')
 
@@ -71,7 +73,15 @@ def home():
 @app.route('/api')
 def api_root():
     "API root."
-    items = {}
+    items = {
+        'schema': {
+            'root': {'href': utils.url_for('api_schema.root')},
+            'user': {'href': utils.url_for('api_schema.user')}
+        },
+        'about': {
+            'software': {'href': utils.url_for('api_about.software')}
+        }
+    }
     if flask.g.current_user:
         items['user'] = {
             'username': flask.g.current_user['username'],

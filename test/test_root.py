@@ -1,4 +1,4 @@
-"Test root API."
+"Test the root API endpoint."
 
 import http.client
 
@@ -8,9 +8,9 @@ import base
 class Root(base.Base):
     "Test the root API endpoint."
 
-    def test_data(self):
+    def test_root_data(self):
         "Get API root JSON."
-        url = f"{base.CONFIG['root_url']}"
+        url = f"{base.SETTINGS['ROOT_URL']}"
         response = self.session.get(url)
         self.check_schema(response)
 

@@ -16,9 +16,9 @@ SCHEMA_LINK_RX = re.compile(r'<([^>])+>; rel="([^"]+)')
 JSON_MIMETYPE = 'application/json'
 
 DEFAULT_SETTINGS = {
-    'root_url': 'http://127.0.0.1:5001/api',
-    'username': None,           # Needs to be set! Must have admin privileges.
-    'apikey': None              # Needs to be set! For the above user.
+    'ROOT_URL': 'http://127.0.0.1:5002/api',
+    'USERNAME': None,           # Needs to be set! Must have admin privileges.
+    'APIKEY': None              # Needs to be set! For the above user.
 }
 
 # The actual settings to use.
@@ -55,7 +55,7 @@ class Base(unittest.TestCase):
     def setUp(self):
         self.schemas = {}
         self.session = requests.Session()
-        self.session.headers.update({'x-apikey': SETTINGS['apikey']})
+        self.session.headers.update({'x-apikey': SETTINGS['APIKEY']})
         self.addCleanup(self.close_session)
 
     def close_session(self):
@@ -67,7 +67,7 @@ class Base(unittest.TestCase):
         try:
             return self._root
         except AttributeError:
-            response = self.session.get(SETTINGS['root_url'])
+            response = self.session.get(SETTINGS['ROOT_URL'])
             self.assertEqual(response.status_code, http.client.OK)
             self._root = self.check_schema(response)
             return self._root

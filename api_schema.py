@@ -18,6 +18,31 @@ ROOT = {
     ]
 }
 
+ABOUT_SOFTWARE = {
+    'type': 'object',
+    'properties': {
+        '$id': _URI,
+        'timestamp': _DATETIME,
+        'software': {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'name': {'type': 'string'},
+                    'version': {'type': 'string'},
+                    'href': _URI
+                }
+            }
+        }
+    },
+    'required': [
+        '$id',
+        'timestamp',
+        'software'
+    ],
+    'additionalProperties': False
+}
+
 USER = {
     'type': 'object',
     'properties': {
@@ -76,6 +101,10 @@ blueprint = flask.Blueprint('api_schema', __name__)
 @blueprint.route('/root', methods=['GET'])
 def root():
     return flask.jsonify(ROOT)
+
+@blueprint.route('/about/software', methods=['GET'])
+def about_software():
+    return flask.jsonify(ABOUT_SOFTWARE)
 
 @blueprint.route('/user', methods=['GET'])
 def user():

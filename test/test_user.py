@@ -1,4 +1,4 @@
-"Test user API."
+"Test the user API endpoints."
 
 import http.client
 
@@ -8,9 +8,9 @@ import base
 class User(base.Base):
     "Test the user API endpoints."
 
-    def test_data(self):
+    def test_user_data(self):
         "Get user JSON."
-        url = f"{base.CONFIG['root_url']}/user/{base.CONFIG['username']}"
+        url = f"{base.SETTINGS['ROOT_URL']}/user/{base.SETTINGS['USERNAME']}"
         response = self.session.get(url)
         user = self.check_schema(response)
 

@@ -10,13 +10,22 @@
     <th>Version</th>
     <th>Link</th>
   </tr>
-  {% for software, version, url in softwares %}
+  {% for name, version, url in software %}
   <tr>
-    <td>{{ software }}</td>
+    <td>{{ name }}</td>
     <td>{{ version }}</td>
     <td><a href="{{ url }}">{{ url }}</a></td>
   </tr>
   {% endfor %}
 </table>
 {% endblock %} {# block main #}
+
+{% block meta %}
+<div class="py-1">
+  <div>
+    <a href="{{ url_for('api_about.software') }}"
+       class="badge badge-pill badge-dark">API</a>
+  </div>
+</div>
+{% endblock %} {# block meta #}
 
