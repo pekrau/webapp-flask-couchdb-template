@@ -15,34 +15,34 @@ SCHEMA_LINK_RX = re.compile(r'<([^>])+>; rel="([^"]+)')
 
 JSON_MIMETYPE = 'application/json'
 
-DEFAULT_CONFIG = {
+DEFAULT_SETTINGS = {
     'root_url': 'http://127.0.0.1:5001/api',
     'username': None,           # Needs to be set! Must have admin privileges.
     'apikey': None              # Needs to be set! For the above user.
 }
 
-# The actual configuration values to use.
-CONFIG = {}
+# The actual settings to use.
+SETTINGS = {}
 
 def process_args(filepath=None):
     """Process command-line arguments for this test suite.
-    Reset the configuration and read the given configuration file.
+    Reset the settings and read the given settings file.
     Return the unused arguments.
     """
     if filepath is None:
         parser = argparse.ArgumentParser()
-        parser.add_argument('-C', '--config', dest='config',
-                            metavar='FILE', default='config.json',
-                            help='Configuration file')
+        parser.add_argument('-S', '--settings', dest='settings',
+                            metavar='FILE', default='settings.json',
+                            help='Settings file')
         parser.add_argument('unittest_args', nargs='*')
         options, args = parser.parse_known_args()
-        filepath = options.config
+        filepath = options.settings
         args = [sys.argv[0]] + args
     else:
         args = sys.argv
-    CONFIG.update(DEFAULT_CONFIG)
+    SETTINGS.update(DEFAULT_SETTINGS)
     with open(filepath) as infile:
-        CONFIG.update(json.load(infile))
+        SETTINGS.update(json.load(infile))
     return args
 
 def run():
@@ -55,7 +55,7 @@ class Base(unittest.TestCase):
     def setUp(self):
         self.schemas = {}
         self.session = requests.Session()
-        self.session.headers.update({'x-apikey': CONFIG['apikey']})
+        self.session.headers.update({'x-apikey': SETTINGS['apikey']})
         self.addCleanup(self.close_session)
 
     def close_session(self):
@@ -67,7 +67,7 @@ class Base(unittest.TestCase):
         try:
             return self._root
         except AttributeError:
-            response = self.session.get(CONFIG['root_url'])
+            response = self.session.get(SETTINGS['root_url'])
             self.assertEqual(response.status_code, http.client.OK)
             self._root = self.check_schema(response)
             return self._root

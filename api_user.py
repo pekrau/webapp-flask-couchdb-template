@@ -16,7 +16,7 @@ def all():
         {'username': u['username'],
          'href': utils.url_for('api_user.profile', username=u['username'])
         }
-        for u in flask.g.systemdb['users'].find()
+        for u in user_module.get_users(role=None)
     ]
     return utils.jsonify(utils.get_json(users=users), schema='/users')
 

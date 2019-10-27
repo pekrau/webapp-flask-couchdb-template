@@ -94,7 +94,7 @@ def register():
             utils.flash_message('User account created; check your email.')
         # Was set to 'pending'; send email to admins.
         else:
-            admins = flask.g.db['users'].find({'role': constants.ADMIN})
+            admins = get_users(constants.ADMIN, status=constants.ENABLED)
             emails = [u['email'] for u in admins]
             site = flask.current_app.config['SITE_NAME']
             message = flask_mail.Message(f"{site} user account pending",
@@ -207,7 +207,7 @@ def edit(username):
         if not is_empty(user):
             utils.flash_error('cannot delete non-empty user account')
             return flask.redirect(flask.url_for('.profile', username=username))
-        flask.g.db['users'].delete_one({'_id': user['_id']})
+        flask.g.db.delete(user)
         utils.flash_message(f"Deleted user {username}.")
         if flask.g.is_admin:
             return flask.redirect(flask.url_for('.users'))
@@ -225,15 +225,14 @@ def logs(username):
     if not is_admin_or_self(user):
         utils.flash_error('access not allowed')
         return flask.redirect(flask.url_for('home'))
-    logs = list(flask.g.db['user_logs'].find({'username': username}))
-    logs.sort(key=lambda l: l['timestamp'], reverse=True)
+    logs = utils.get_log_entries(user['_id'])
     return flask.render_template('user/logs.html', user=user, logs=logs)
 
 @blueprint.route('/all')
 @admin_required
 def all():
     "Display list of all users."
-    users = list(flask.g.db['users'].find())
+    users = get_users(role=None)
     return flask.render_template('user/all.html', users=users)
 
 @blueprint.route('/enable/<name:username>', methods=['POST'])
@@ -348,26 +347,43 @@ def get_user(username=None, email=None, apikey=None):
     """
     if username:
         try:
-            user = flask.g.db.view('users', 'username', key=username)
+            rows = flask.g.db.view('users', 'username',
+                                     key=username, include_docs=True)
         except couchdb2.NotFoundError:
             pass
         else:
-            return user
+            return rows[0].doc
     if email:
         try:
-            user = flask.g.db.view('users', 'email', key=email)
+            rows = flask.g.db.view('users', 'email',
+                                   key=email, include_docs=True)
         except couchdb2.NotFoundError:
             pass
         else:
-            return user
+            return rows[0].doc
     if apikey:
         try:
-            user = flask.g.db.view('users', 'apikey', key=apikey)
+            rows = flask.g.db.view('users', 'apikey', 
+                                   key=apikey, include_docs=True)
         except couchdb2.NotFoundError:
             pass
         else:
-            return user
+            return rows[0].doc
     return None
+
+def get_users(role, status=None):
+    "Get the users specified by role and optionally by status."
+    assert role is None or role in constants.USER_ROLES
+    assert status is None or status in constants.USER_STATUSES
+    if role is None:
+        result = [r.doc for r in 
+                  flask.g.db.view('users', 'role', include_docs=True)]
+    else:
+        result = [r.doc for r in 
+                  flask.g.db.view('users', 'role', key=role, include_docs=True)]
+    if status is not None:
+        result = [d for d in result if d['status'] == status]
+    return result
 
 def get_current_user():
     """Return the user for the current session.

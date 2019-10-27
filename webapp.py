@@ -49,6 +49,7 @@ def setup_template_context():
 
 @app.before_first_request
 def init_database():
+    flask.g.db = utils.get_db()
     utils.update_designs()
 
 @app.before_request

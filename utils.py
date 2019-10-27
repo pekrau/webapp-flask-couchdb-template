@@ -133,15 +133,17 @@ def accept_json():
     return best == constants.JSON_MIMETYPE and \
         acc[best] > acc[constants.HTML_MIMETYPE]
 
-def get_json(**items):
-    "Return the JSON structure adding standard entries."
+def get_json(**data):
+    "Return the JSON structure after fixing up for external representation."
     result = {'$id': flask.request.url,
               'timestamp': get_time()}
     try:
-        result['iuid'] = items.pop('_id')
+        result['iuid'] = data.pop('_id')
     except KeyError:
         pass
-    result.update(items)
+    data.pop('_rev', None)
+    data.pop('doctype', None)
+    result.update(data)
     return result
 
 def jsonify(result, schema=None):
@@ -152,7 +154,6 @@ def jsonify(result, schema=None):
         url = flask.current_app.config['SCHEMA_BASE_URL']
         response.headers.add('Link', f"<{url}{schema}>", rel='schema')
     return response
-
 
 def get_dbserver(app=None):
     "Get the connection to the CouchDB database server."
@@ -213,6 +214,16 @@ def add_log_entry(current, original, hide=[]):
         entry['user_agent'] = None
     flask.g.db.put(entry)
 
+def get_log_entries(docid):
+    """Return the list of log entries for the given document identifier,
+    sorted by reverse timestamp.
+    """
+    return [r.doc for r in flask.g.db.view('logs', 'doc',
+                                           startkey=[docid, 'ZZZZZZ'],
+                                           endkey=[docid],
+                                           descending=True,
+                                           include_docs=True)]
+
 def update_designs():
     "Update the CouchDB database design document (view indices)."
     for name, doc in DESIGNS.items():
@@ -225,6 +236,7 @@ DESIGNS = {
             'username': {'map': "function (doc) {if (doc.doctype !== 'user') return; emit(doc.username, null);}"},
             'email': {'map': "function (doc) {if (doc.doctype !== 'user') return;  emit(doc.email, null);}"},
             'apikey': {'map': "function (doc) {if (doc.doctype !== 'user') return;  emit(doc.apikey, null);}"},
+            'role': {'map': "function (doc) {if (doc.doctype !== 'user') return;  emit(doc.role, null);}"},
         }
     },
     'logs': {

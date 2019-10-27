@@ -9,20 +9,24 @@
   <thead>
     <tr>
       <th>Timestamp</th>
-      <th>Editor</th>
+      <th>User</th>
       <th>Remote address</th>
       <th>User agent</th>
-      <th>New values</th>
+      <th>Added keys</th>
+      <th>Updated items</th>
+      <th>Removed items</th>
     </tr>
   </thead>
   <tbody>
     {% for log in logs %}
     <tr>
       <td class="localtime">{{ log['timestamp'] }}</td>
-      <td>{{ log['editor'] or '-' }}</td>
+      <td>{{ log['username'] or '-' }}</td>
       <td>{{ log['remote_addr'] or '-' }}</td>
       <td>{{ log['user_agent'] or '-' }}</td>
-      <td><pre>{{ log['new'] | tojson(indent=2) }}</pre></td>
+      <td><pre>{{ log['added'] | tojson(indent=2) }}</pre></td>
+      <td><pre>{{ log['updated'] | tojson(indent=2) }}</pre></td>
+      <td><pre>{{ log['removed'] | tojson(indent=2) }}</pre></td>
     </tr>
     {% endfor %}
   </tbody>

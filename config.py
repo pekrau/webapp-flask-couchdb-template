@@ -12,11 +12,11 @@ logger = logging.getLogger('webapp')
 ROOT_DIRPATH = os.path.dirname(os.path.abspath(__file__))
 
 # Default configurable values; modified by letting 'init' read a JSON file.
-CONFIG = dict(
+SETTINGS = dict(
     SERVER_NAME = '127.0.0.1:5002',
     SITE_NAME = 'webapp',
     DEBUG = False,
-    SECRET_KEY = None,          # Must be set in 'config.json'
+    SECRET_KEY = None,          # Must be set in 'settings.json'
     SALT_LENGTH = 12,
     COUCHDB_URL = 'http://127.0.0.1:5984/',
     COUCHDB_USERNAME = None,
@@ -39,19 +39,17 @@ CONFIG = dict(
 
 def init(app):
     """Perform the configuration of the Flask app.
-    Set the defaults, and then read JSON config file.
+    Set the defaults, and then read JSON settings file.
     Check the environment for a specific set of variables and use if defined.
     """
     messages = []
     # Set the defaults specified above.
-    app.config.from_mapping(CONFIG)
-    # Modify the configuration from a JSON config file.
+    app.config.from_mapping(SETTINGS)
+    # Modify the configuration from a JSON settings file.
     try:
-        filepath = os.environ['CONFIG_FILEPATH']
-        app.config.from_json(filepath)
-        # Raises an error if filepath variable defined, but no such file.
+        filepath = os.environ['SETTINGS_FILEPATH']
     except KeyError:
-        for filepath in ['config.json', 'site/config.json']:
+        for filepath in ['settings.json', 'site/settings.json']:
             filepath = os.path.normpath(os.path.join(ROOT_DIRPATH, filepath))
             try:
                 app.config.from_json(filepath)
@@ -59,6 +57,9 @@ def init(app):
                 filepath = None
             else:
                 break
+    else:
+        # Raises an error if filepath variable defined, but no such file.
+        app.config.from_json(filepath)
 
     if filepath:
         messages.append(f"Configuration file: {filepath}")

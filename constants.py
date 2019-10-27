@@ -3,8 +3,8 @@
 import re
 
 
-VERSION = '0.1'
-SOURCE_URL = 'https://github.com/pekrau/webapp-template'
+VERSION = '0.9'
+SOURCE_URL = 'https://github.com/pekrau/webapp-flask-couchdb-template'
 
 BOOTSTRAP_VERSION  = '4.3.1'
 JQUERY_VERSION     = '3.3.1'
