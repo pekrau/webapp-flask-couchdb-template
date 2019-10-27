@@ -348,7 +348,7 @@ def get_user(username=None, email=None, apikey=None):
     if username:
         try:
             rows = flask.g.db.view('users', 'username',
-                                     key=username, include_docs=True)
+                                   key=username, include_docs=True)
         except couchdb2.NotFoundError:
             pass
         else:
