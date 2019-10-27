@@ -202,9 +202,9 @@ def add_log_entry(current, original, hide=[]):
              'updated': updated,
              'removed': removed,
              'timestamp': get_time()}
-    try:
+    if hasattr(flask.g, 'current_user') and flask.g.current_user:
         entry['username'] = flask.g.current_user['username']
-    except (AttributeError, KeyError):
+    else:
         entry['username'] = None
     if flask.has_request_context():
         entry['remote_addr'] = str(flask.request.remote_addr)

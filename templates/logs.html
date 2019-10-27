@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block head_title %}User {{ user['username'] }} logs{% endblock %}
+{% block head_title %}{{ title }} logs{% endblock %}
 
-{% block body_title %}User {{ user['username'] }} logs{% endblock %}
+{% block body_title %}{{ title }} logs{% endblock %}
 
 {% block main %}
 <table class="table">
@@ -35,7 +35,7 @@
 
 {% block actions %}
 <div>
-  <a href="{{ url_for('.profile', username=user['username']) }}"
+  <a href="{{ cancel_url }}" 
      role="button" class="btn btn-dark btn-block">Back</a>
 </div>
 {% endblock %}

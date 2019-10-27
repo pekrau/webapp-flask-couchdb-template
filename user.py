@@ -225,8 +225,11 @@ def logs(username):
     if not is_admin_or_self(user):
         utils.flash_error('access not allowed')
         return flask.redirect(flask.url_for('home'))
-    logs = utils.get_log_entries(user['_id'])
-    return flask.render_template('user/logs.html', user=user, logs=logs)
+    return flask.render_template(
+        'logs.html',
+        title=f"User {user['username']}",
+        cancel_url=flask.url_for('.profile', username=user['username']),
+        logs=utils.get_log_entries(user['_id']))
 
 @blueprint.route('/all')
 @admin_required
@@ -346,28 +349,19 @@ def get_user(username=None, email=None, apikey=None):
     Return None if no such user.
     """
     if username:
-        try:
-            rows = flask.g.db.view('users', 'username',
-                                   key=username, include_docs=True)
-        except couchdb2.NotFoundError:
-            pass
-        else:
+        rows = flask.g.db.view('users', 'username', 
+                               key=username, include_docs=True)
+        if len(rows) == 1:
             return rows[0].doc
     if email:
-        try:
-            rows = flask.g.db.view('users', 'email',
-                                   key=email, include_docs=True)
-        except couchdb2.NotFoundError:
-            pass
-        else:
+        rows = flask.g.db.view('users', 'email',
+                               key=email, include_docs=True)
+        if len(rows) == 1:
             return rows[0].doc
     if apikey:
-        try:
-            rows = flask.g.db.view('users', 'apikey', 
-                                   key=apikey, include_docs=True)
-        except couchdb2.NotFoundError:
-            pass
-        else:
+        rows = flask.g.db.view('users', 'apikey', 
+                               key=apikey, include_docs=True)
+        if len(rows) == 1:
             return rows[0].doc
     return None
 
