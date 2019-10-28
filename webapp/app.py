@@ -1,4 +1,4 @@
-"Web app."
+"Web app template."
 
 import flask
 
@@ -22,15 +22,6 @@ config.init(app)
 
 # Init the mail handler.
 utils.mail.init_app(app)
-
-# Set up the URL map.
-app.register_blueprint(about.blueprint, url_prefix='/about')
-app.register_blueprint(user.blueprint, url_prefix='/user')
-
-app.register_blueprint(api.root.blueprint, url_prefix='/api')
-app.register_blueprint(api.about.blueprint, url_prefix='/api/about')
-app.register_blueprint(api.schema.blueprint, url_prefix='/api/schema')
-app.register_blueprint(api.user.blueprint, url_prefix='/api/user')
 
 # Add template filters.
 app.add_template_filter(utils.thousands)
@@ -62,6 +53,15 @@ def home():
         return flask.redirect(flask.url_for('api_root'))
     else:
         return flask.render_template('home.html')
+
+# Set up the URL map.
+app.register_blueprint(about.blueprint, url_prefix='/about')
+app.register_blueprint(user.blueprint, url_prefix='/user')
+
+app.register_blueprint(api.root.blueprint, url_prefix='/api')
+app.register_blueprint(api.about.blueprint, url_prefix='/api/about')
+app.register_blueprint(api.schema.blueprint, url_prefix='/api/schema')
+app.register_blueprint(api.user.blueprint, url_prefix='/api/user')
 
 
 # This code is used only during testing.
