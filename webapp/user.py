@@ -3,7 +3,6 @@
 import functools
 import http.client
 import json
-import logging
 import re
 
 import flask
@@ -12,8 +11,6 @@ import werkzeug.security
 
 import constants
 import utils
-
-logger = logging.getLogger('webapp')
 
 # Decorators
 
@@ -68,7 +65,9 @@ def login():
 @blueprint.route('/logout', methods=['POST'])
 def logout():
     "Logout from the user account."
-    del flask.session['username']
+    username = flask.session.pop('username', None)
+    if username:
+        utils.get_logger().info(f"logged out {username}")
     return flask.redirect(flask.url_for('home'))
 
 @blueprint.route('/register', methods=['GET', 'POST'])
@@ -401,6 +400,7 @@ def do_login(username, password):
         raise ValueError
     if user['status'] != constants.ENABLED:
         raise ValueError
+    utils.get_logger().info(f"logging in {user['username']}")
     flask.session['username'] = user['username']
     flask.session.permanent = True
 

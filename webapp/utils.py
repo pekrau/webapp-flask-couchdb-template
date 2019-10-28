@@ -14,7 +14,20 @@ import werkzeug.routing
 
 import constants
 
-logger = logging.getLogger('webapp')
+_logger = None
+def get_logger():
+    global _logger
+    if _logger is None:
+        _logger = logging.getLogger(constants.LOGGER_NAME)
+        config = flask.current_app.config
+        if config['DEBUG']:
+            _logger.setLevel(logging.DEBUG)
+        else:
+            _logger.setLevel(logging.WARNING)
+        loghandler = logging.StreamHandler()
+        loghandler.setFormatter(logging.Formatter(config['LOGFORMAT']))
+        _logger.addHandler(loghandler)
+    return _logger
 
 # Global instance of mail interface.
 mail = flask_mail.Mail()
@@ -45,6 +58,7 @@ class Timer:
     def milliseconds(self):
         "Return CPU time (in milliseconds) since start of this timer."
         return round(1000 * self())
+
 def get_iuid():
     "Return a new IUID, which is a UUID4 pseudo-random string."
     return uuid.uuid4().hex
@@ -229,19 +243,13 @@ def get_logs(docid):
             log.pop(key)
     return result
 
-def update_designs():
-    "Update the CouchDB database design document (view indices)."
-    for name, doc in DESIGNS.items():
-        if flask.g.db.put_design(name, doc):
-            logger.info(f"Updated design document '{name}'.")
-
 DESIGNS = {
     'users': {
         'views': {
-            'username': {'map': "function (doc) {if (doc.doctype !== 'user') return; emit(doc.username, null);}"},
-            'email': {'map': "function (doc) {if (doc.doctype !== 'user') return;  emit(doc.email, null);}"},
-            'apikey': {'map': "function (doc) {if (doc.doctype !== 'user') return;  emit(doc.apikey, null);}"},
-            'role': {'map': "function (doc) {if (doc.doctype !== 'user') return;  emit(doc.role, null);}"},
+            'username': {'map': "function(doc) {if (doc.doctype !== 'user') return; emit(doc.username, null);}"},
+            'email': {'map': "function(doc) {if (doc.doctype !== 'user') return;  emit(doc.email, null);}"},
+            'apikey': {'map': "function(doc) {if (doc.doctype !== 'user') return;  emit(doc.apikey, null);}"},
+            'role': {'map': "function(doc) {if (doc.doctype !== 'user') return;  emit(doc.role, null);}"},
         }
     },
     'logs': {
@@ -250,3 +258,10 @@ DESIGNS = {
         }
     }
 }
+
+def update_designs():
+    "Update the CouchDB database design document (view indices)."
+    logger = get_logger()
+    for name, doc in DESIGNS.items():
+        if flask.g.db.put_design(name, doc):
+            logger.info(f"Updated design document '{name}'.")

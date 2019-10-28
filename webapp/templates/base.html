@@ -33,8 +33,7 @@
       <div class="collapse navbar-collapse" id="top_navbar">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle"
-               href="#" id="navbarAbout"
+            <a href="#" id="navbarAbout" class="nav-link dropdown-toggle"
                role="button" data-toggle="dropdown"
                aria-haspopup="true" aria-expanded="false">About</a>
             <div class="dropdown-menu" aria-labelledby="navbarAbout">
@@ -47,13 +46,12 @@
         <ul class="navbar-nav justify-content-end">
           {% if g.is_admin %}
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle pr-4"
-               href="#" id="navbarAdmin"
+            <a href="#" id="navbarAdmin" class="nav-link dropdown-toggle pr-4"
                role="button" data-toggle="dropdown"
                aria-haspopup="true" aria-expanded="false">Admin</a>
             <div class="dropdown-menu" aria-labelledby="navbarAdmin">
-              <a class="dropdown-item" href="{{ url_for('user.all') }}">
-                All users</a>
+              <a class="dropdown-item"
+                 href="{{ url_for('user.all') }}">All users</a>
             </div>
           </li>
           {% endif %} {# if g.is_admin #}
@@ -61,8 +59,7 @@
           <li class="mx-1">
             {% if g.current_user %}
             <a href="{{ url_for('user.profile', username=g.current_user['username']) }}"
-	       role="button"
-               class="btn btn-outline-secondary my-2 my-sm-0">
+	       role="button" class="btn btn-outline-secondary my-2 my-sm-0">
               User {{ g.current_user['username'] }}</a>
             {% else %}
             <form action="{{ url_for('user.login') }}"
@@ -125,8 +122,7 @@
       <hr>
       <div class="row">
         <div class="col-md-4 offset-md-8 text-right">
-          <a href="{{ constants.SOURCE_URL }}">
-	    Version {{ constants.VERSION }}</a>
+          <a href="{{ constants.SOURCE_URL}}">Version {{ constants.VERSION}}</a>
         </div>
       </div>
       {% endblock %} {# block footer #}

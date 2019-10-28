@@ -1,13 +1,10 @@
 "Configuration."
 
-import logging
 import os
 import os.path
 
 import constants
 import utils
-
-logger = logging.getLogger('webapp')
 
 ROOT_DIRPATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -16,6 +13,7 @@ SETTINGS = dict(
     SERVER_NAME = '127.0.0.1:5002',
     SITE_NAME = 'webapp',
     DEBUG = False,
+    LOGFORMAT = '%(levelname)-10s %(asctime)s %(message)s',
     SECRET_KEY = None,          # Must be set in 'settings.json'
     SALT_LENGTH = 12,
     COUCHDB_URL = 'http://127.0.0.1:5984/',
@@ -42,28 +40,26 @@ def init(app):
     Set the defaults, and then read JSON settings file.
     Check the environment for a specific set of variables and use if defined.
     """
-    messages = []
     # Set the defaults specified above.
     app.config.from_mapping(SETTINGS)
     # Modify the configuration from a JSON settings file.
     try:
-        filepath = os.environ['SETTINGS_FILEPATH']
+        filepaths = [os.environ['SETTINGS_FILEPATH']]
     except KeyError:
-        for filepath in ['settings.json', 'site/settings.json']:
-            filepath = os.path.normpath(os.path.join(ROOT_DIRPATH, filepath))
-            try:
-                app.config.from_json(filepath)
-            except FileNotFoundError:
-                filepath = None
-            else:
-                break
-    else:
-        # Raises an error if filepath variable defined, but no such file.
-        app.config.from_json(filepath)
-
-    if filepath:
-        messages.append(f"Configuration file: {filepath}")
-    for key, convert in [('SECRET_KEY', str),
+        filepaths = []
+    for filepath in ['settings.json', '../site/settings.json']:
+        filepaths.append(os.path.normpath(os.path.join(ROOT_DIRPATH, filepath)))
+    for filepath in filepaths:
+        try:
+            app.config.from_json(filepath)
+        except FileNotFoundError:
+            pass
+        else:
+            app.config['SETTINGS_FILE'] = filepath
+            break
+    # Modify the configuration from environment variables.
+    for key, convert in [('DEBUG', utils.to_bool),
+                         ('SECRET_KEY', str),
                          ('COUCHDB_URL', str),
                          ('COUCHDB_USERNAME', str),
                          ('COUCHDB_PASSWORD', str),
@@ -75,12 +71,9 @@ def init(app):
                          ('MAIL_DEFAULT_SENDER', str)]:
         try:
             app.config[key] = convert(os.environ[key])
-            messages.append(f"Configuration {key} from environment")
         except (KeyError, TypeError, ValueError):
             pass
-    if app.config['DEBUG']:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.WARNING)
-    for message in messages:
-        logger.info(message)
+    # Sanity check; should not execute if this fails.
+    assert app.config['SECRET_KEY']
+    assert app.config['SALT_LENGTH'] > 6
+    assert app.config['MIN_PASSWORD_LENGTH'] > 4

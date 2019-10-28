@@ -2,13 +2,14 @@
 
 import re
 
-
-VERSION = '0.9.4'
+VERSION = '0.9.5'
 SOURCE_URL = 'https://github.com/pekrau/webapp-flask-couchdb-template'
 
 BOOTSTRAP_VERSION  = '4.3.1'
 JQUERY_VERSION     = '3.3.1'
 DATATABLES_VERSION = '1.10.18'
+
+LOGGER_NAME = 'webapp'
 
 NAME_RX  = re.compile(r'^[a-z][a-z0-9_-]*$', re.I)
 IUID_RX  = re.compile(r'^[a-f0-9]{32,32}$', re.I)
