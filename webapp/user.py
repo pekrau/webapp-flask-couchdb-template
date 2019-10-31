@@ -8,8 +8,8 @@ import flask
 import flask_mail
 import werkzeug.security
 
-import constants
-import utils
+from . import constants
+from . import utils
 
 
 blueprint = flask.Blueprint('user', __name__)
@@ -393,8 +393,8 @@ def send_password_code(user, action):
 
 def is_empty(user):
     "Is the given user account empty? No data associated with it."
-    # XXX Needs reimplementation.
-    return True
+    # XXX Needs implementation.
+    return False
 
 def is_admin_or_self(user):
     "Is the current user admin, or the same as the given user?"

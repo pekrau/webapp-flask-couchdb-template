@@ -4,23 +4,23 @@ import http.client
 
 import flask
 
-import user as user_module
-import utils
+import webapp.user
+from .. import utils
 
 
 blueprint = flask.Blueprint('api_user', __name__)
 
 @blueprint.route('/')
 def all():
-    users = [get_user_basic(u) for u in user_module.get_users(role=None)]
+    users = [get_user_basic(u) for u in webapp.user.get_users(role=None)]
     return utils.jsonify(utils.get_json(users=users), schema='/users')
 
 @blueprint.route('/<name:username>')
 def profile(username):
-    user = user_module.get_user(username=username)
+    user = webapp.user.get_user(username=username)
     if not user:
         flask.abort(http.client.NOT_FOUND)
-    if not user_module.is_admin_or_self(user):
+    if not webapp.user.is_admin_or_self(user):
         flask.abort(http.client.FORBIDDEN)
     user.pop('password', None)
     user.pop('apikey', None)
@@ -29,10 +29,10 @@ def profile(username):
 
 @blueprint.route('/<name:username>/logs')
 def logs(username):
-    user = user_module.get_user(username=username)
+    user = webapp.user.get_user(username=username)
     if not user:
         flask.abort(http.client.NOT_FOUND)
-    if not user_module.is_admin_or_self(user):
+    if not webapp.user.is_admin_or_self(user):
         flask.abort(http.client.FORBIDDEN)
     return utils.jsonify(
         utils.get_json(user=get_user_basic(user),

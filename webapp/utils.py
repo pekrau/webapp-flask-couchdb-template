@@ -13,7 +13,8 @@ import flask_mail
 import jinja2.utils
 import werkzeug.routing
 
-import constants
+from . import constants
+
 
 # Global logger instance.
 _logger = None

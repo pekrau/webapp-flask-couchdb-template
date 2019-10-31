@@ -4,8 +4,7 @@ import http.client
 
 import flask
 
-import utils
-import about
+from .. import utils
 
 
 blueprint = flask.Blueprint('api', __name__)

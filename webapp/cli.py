@@ -6,10 +6,11 @@ import sys
 
 import flask
 
-import webapp
-import constants
-import user
-import utils
+import webapp.app
+import webapp.user
+
+from webapp import constants
+from webapp import utils
 
 
 def get_parser():
@@ -31,17 +32,18 @@ def execute(pargs):
     "Execute the command."
     if pargs.debug:
         flask.current_app.config['DEBUG'] = True
+        flask.current_app.config['LOGFORMAT'] = '%(levelname)-10s %(message)s'
     if pargs.update:
         utils.update_designs()
     if pargs.create_admin:
-        with user.UserContext() as ctx:
+        with webapp.user.UserContext() as ctx:
             ctx.set_username(input('username > '))
             ctx.set_email(input('email > '))
             ctx.set_password(getpass.getpass('password > '))
             ctx.set_role(constants.ADMIN)
             ctx.set_status(constants.ENABLED)
     if pargs.create_user:
-        with user.UserContext() as ctx:
+        with webapp.user.UserContext() as ctx:
             ctx.set_username(input('username > '))
             ctx.set_email(input('email > '))
             ctx.set_password(getpass.getpass('password > '))
@@ -54,7 +56,7 @@ def main():
     pargs = parser.parse_args()
     if len(sys.argv) == 1:
         parser.print_usage()
-    with webapp.app.app_context():
+    with webapp.app.app.app_context():
         flask.g.db = utils.get_db()
         execute(pargs)
 
