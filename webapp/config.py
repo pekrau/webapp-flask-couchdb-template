@@ -8,8 +8,8 @@ import utils
 
 ROOT_DIRPATH = os.path.dirname(os.path.abspath(__file__))
 
-# Default configurable values; modified by letting 'init' read a JSON file.
-SETTINGS = dict(
+# Default configurable values; modified by reading a JSON file in 'init'.
+DEFAULT_SETTINGS = dict(
     SERVER_NAME = '127.0.0.1:5002',
     SITE_NAME = 'webapp',
     DEBUG = False,
@@ -41,7 +41,7 @@ def init(app):
     Check the environment for a specific set of variables and use if defined.
     """
     # Set the defaults specified above.
-    app.config.from_mapping(SETTINGS)
+    app.config.from_mapping(DEFAULT_SETTINGS)
     # Modify the configuration from a JSON settings file.
     try:
         filepaths = [os.environ['SETTINGS_FILEPATH']]
