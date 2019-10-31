@@ -52,6 +52,8 @@
             <div class="dropdown-menu" aria-labelledby="navbarAdmin">
               <a class="dropdown-item"
                  href="{{ url_for('user.all') }}">All users</a>
+              <a class="dropdown-item"
+                 href="{{ url_for('about.settings') }}">Settings</a>
             </div>
           </li>
           {% endif %} {# if g.is_admin #}

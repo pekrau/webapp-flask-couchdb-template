@@ -14,6 +14,8 @@ import api.schema
 import api.user
 
 app = flask.Flask(__name__)
+
+# Add URL map converters
 app.url_map.converters['name'] = utils.NameConverter
 app.url_map.converters['iuid'] = utils.IuidConverter
 
