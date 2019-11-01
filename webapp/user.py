@@ -63,9 +63,11 @@ def register():
         except ValueError as error:
             utils.flash_error(error)
             return flask.redirect(flask.url_for('.register'))
+        utils.get_logger().info(f"registered user {user['username']}")
         # Directly enabled; send code to the user.
         if user['status'] == constants.ENABLED:
             send_password_code(user, 'registration')
+            utils.get_logger().info(f"enabled user {user['username']}")
             utils.flash_message('User account created; check your email.')
         # Was set to 'pending'; send email to admins.
         else:
@@ -77,6 +79,7 @@ def register():
             url = utils.url_for('.profile', username=user['username'])
             message.body = f"To enable the user account, go to {url}"
             utils.mail.send(message)
+            utils.get_logger().info(f"pending user {user['username']}")
             utils.flash_message('User account created; an email will be sent'
                                 ' when it has been enabled by the admin.')
         return flask.redirect(flask.url_for('home'))
@@ -99,6 +102,7 @@ def reset():
             with UserContext(user) as ctx:
                 ctx.set_password()
             send_password_code(user, 'password reset')
+        utils.get_logger().info(f"reset user {user['username']}")
         utils.flash_message('An email has been sent if the user account exists.')
         return flask.redirect(flask.url_for('home'))
 
@@ -129,6 +133,7 @@ def password():
         else:
             with UserContext(user) as ctx:
                 ctx.set_password(password)
+            utils.get_logger().info(f"password user {user['username']}")
             do_login(username, password)
         return flask.redirect(flask.url_for('home'))
 
@@ -184,6 +189,7 @@ def edit(username):
             return flask.redirect(flask.url_for('.profile', username=username))
         flask.g.db.delete(user)
         utils.flash_message(f"Deleted user {username}.")
+        utils.get_logger().info(f"deleted user {username}")
         if flask.g.is_admin:
             return flask.redirect(flask.url_for('.users'))
         else:
@@ -226,6 +232,7 @@ def enable(username):
         ctx.set_status(constants.ENABLED)
         ctx.set_password()
     send_password_code(user, 'enabled')
+    utils.get_logger().info(f"enabled user {username}")
     return flask.redirect(flask.url_for('.profile', username=username))
 
 @blueprint.route('/disable/<name:username>', methods=['POST'])
@@ -238,6 +245,7 @@ def disable(username):
         return flask.redirect(flask.url_for('home'))
     with UserContext(user) as ctx:
         ctx.set_status(constants.DISABLED)
+    utils.get_logger().info(f"disabled user {username}")
     return flask.redirect(flask.url_for('.profile', username=username))
 
 
@@ -376,9 +384,9 @@ def do_login(username, password):
         raise ValueError
     if user['status'] != constants.ENABLED:
         raise ValueError
-    utils.get_logger().info(f"logging in {user['username']}")
     flask.session['username'] = user['username']
     flask.session.permanent = True
+    utils.get_logger().info(f"logged in {user['username']}")
 
 def send_password_code(user, action):
     "Send an email with the one-time code to the user's email address."

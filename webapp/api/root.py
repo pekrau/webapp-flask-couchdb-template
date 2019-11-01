@@ -9,7 +9,7 @@ from .. import utils
 
 blueprint = flask.Blueprint('api', __name__)
 
-@blueprint.route('/api')
+@blueprint.route('')
 def root():
     "API root."
     items = {

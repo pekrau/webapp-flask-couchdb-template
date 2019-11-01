@@ -23,14 +23,34 @@ def get_logger():
     if _logger is None:
         _logger = logging.getLogger(constants.LOGGER_NAME)
         config = flask.current_app.config
-        if config['DEBUG']:
+        if config['LOG_DEBUG']:
             _logger.setLevel(logging.DEBUG)
         else:
             _logger.setLevel(logging.WARNING)
-        loghandler = logging.StreamHandler()
-        loghandler.setFormatter(logging.Formatter(config['LOGFORMAT']))
+        if config['LOG_FILEPATH']:
+            if config['LOG_ROTATING']:
+                loghandler = logging.TimedRotatingFileHandler(
+                    config['LOG_FILEPATH'],
+                    when='midnight',
+                    backupCount=config['LOG_ROTATING'])
+            else:
+                loghandler = logging.FileHandler(config['LOG_FILEPATH'])
+        else:
+            loghandler = logging.StreamHandler()
+        loghandler.setFormatter(logging.Formatter(config['LOG_FORMAT']))
         _logger.addHandler(loghandler)
     return _logger
+
+def log_access(response):
+    "Record access in the log."
+    if flask.g.current_user:
+        username = flask.g.current_user['username']
+    else:
+        username = None
+    get_logger().debug(f"{flask.request.remote_addr} {username}"
+                       f" {flask.request.method} {flask.request.path}"
+                       f" {response.status_code}")
+    return response
 
 # Global instance of mail interface.
 mail = flask_mail.Mail()

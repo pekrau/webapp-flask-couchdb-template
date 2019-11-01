@@ -1,4 +1,4 @@
-"Command-line interface."
+"Command-line tool."
 
 import argparse
 import getpass
@@ -15,7 +15,8 @@ from webapp import utils
 
 def get_parser():
     "Get the parser for the command line tool."
-    p = argparse.ArgumentParser(prog='webapp.cli', usage='%(prog)s [options]',
+    p = argparse.ArgumentParser(prog='command_line_tool.py',
+                                usage='python %(prog)s [options]',
                                 description='webapp command line tool')
     p.add_argument('-d', '--debug', action='store_true',
                     help='Debug logging output.')
