@@ -32,18 +32,6 @@
       </button>
       <div class="collapse navbar-collapse" id="top_navbar">
         <ul class="navbar-nav mr-auto">
-          <li class="nav-item dropdown">
-            <a href="#" id="navbarAbout" class="nav-link dropdown-toggle"
-               role="button" data-toggle="dropdown"
-               aria-haspopup="true" aria-expanded="false">About</a>
-            <div class="dropdown-menu" aria-labelledby="navbarAbout">
-              <a class="nav-link"
-                 href="{{ url_for('about.software') }}">Software</a>
-	    </div>
-          </li>
-        </ul>
-
-        <ul class="navbar-nav justify-content-end">
           {% if g.is_admin %}
           <li class="nav-item dropdown">
             <a href="#" id="navbarAdmin" class="nav-link dropdown-toggle pr-4"
@@ -57,6 +45,18 @@
             </div>
           </li>
           {% endif %} {# if g.is_admin #}
+        </ul>
+
+        <ul class="navbar-nav justify-content-end">
+          <li class="nav-item dropdown">
+            <a href="#" id="navbarAbout" class="nav-link dropdown-toggle"
+               role="button" data-toggle="dropdown"
+               aria-haspopup="true" aria-expanded="false">About</a>
+            <div class="dropdown-menu" aria-labelledby="navbarAbout">
+              <a class="nav-link"
+                 href="{{ url_for('about.software') }}">Software</a>
+	    </div>
+          </li>
 
           <li class="mx-1">
             {% if g.current_user %}
