@@ -10,13 +10,13 @@ import webapp.api.about
 import webapp.api.root
 import webapp.api.schema
 import webapp.api.user
-
 from webapp import constants
 from webapp import utils
 
+
 app = flask.Flask(__name__)
 
-# Add URL map converters
+# Add URL map converters.
 app.url_map.converters['name'] = utils.NameConverter
 app.url_map.converters['iuid'] = utils.IuidConverter
 
@@ -69,8 +69,6 @@ app.register_blueprint(webapp.api.schema.blueprint, url_prefix='/api/schema')
 app.register_blueprint(webapp.api.user.blueprint, url_prefix='/api/user')
 
 
-# This code is used only during testing.
+# This code is used only during development.
 if __name__ == '__main__':
-    app.run(debug=True)
-
-
+    app.run()

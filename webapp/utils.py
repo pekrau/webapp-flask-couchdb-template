@@ -21,8 +21,8 @@ _logger = None
 def get_logger():
     global _logger
     if _logger is None:
-        _logger = logging.getLogger(constants.LOGGER_NAME)
         config = flask.current_app.config
+        _logger = logging.getLogger(config['LOG_NAME'])
         if config['LOG_DEBUG']:
             _logger.setLevel(logging.DEBUG)
         else:
