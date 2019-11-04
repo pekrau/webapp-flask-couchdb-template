@@ -13,6 +13,7 @@ DEFAULT_SETTINGS = dict(
     SERVER_NAME = '127.0.0.1:5002',
     SITE_NAME = 'webapp',
     DEBUG = False,
+    LOG_DEBUG = False,
     LOG_NAME = 'webapp',
     LOG_FILEPATH = None,
     LOG_ROTATING = 0,           # Number of backup rotated log files, if any.

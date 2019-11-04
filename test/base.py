@@ -43,6 +43,8 @@ def process_args(filepath=None):
     SETTINGS.update(DEFAULT_SETTINGS)
     with open(filepath) as infile:
         SETTINGS.update(json.load(infile))
+    assert SETTINGS['USERNAME']
+    assert SETTINGS['APIKEY']
     return args
 
 def run():
