@@ -37,19 +37,19 @@ def execute(pargs):
     if pargs.update:
         utils.update_designs()
     if pargs.create_admin:
-        with webapp.user.UserContext() as ctx:
-            ctx.set_username(input('username > '))
-            ctx.set_email(input('email > '))
-            ctx.set_password(getpass.getpass('password > '))
-            ctx.set_role(constants.ADMIN)
-            ctx.set_status(constants.ENABLED)
+        with webapp.user.UserSaver() as saver:
+            saver.set_username(input('username > '))
+            saver.set_email(input('email > '))
+            saver.set_password(getpass.getpass('password > '))
+            saver.set_role(constants.ADMIN)
+            saver.set_status(constants.ENABLED)
     if pargs.create_user:
-        with webapp.user.UserContext() as ctx:
-            ctx.set_username(input('username > '))
-            ctx.set_email(input('email > '))
-            ctx.set_password(getpass.getpass('password > '))
-            ctx.set_role(constants.USER)
-            ctx.set_status(constants.ENABLED)
+        with webapp.user.UserSaver() as saver:
+            saver.set_username(input('username > '))
+            saver.set_email(input('email > '))
+            saver.set_password(getpass.getpass('password > '))
+            saver.set_role(constants.USER)
+            saver.set_status(constants.ENABLED)
 
 def main():
     "Entry point for command line tool."

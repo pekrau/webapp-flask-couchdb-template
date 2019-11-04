@@ -54,12 +54,12 @@ def register():
 
     elif utils.http_POST():
         try:
-            with UserContext() as ctx:
-                ctx.set_username(flask.request.form.get('username'))
-                ctx.set_email(flask.request.form.get('email'))
-                ctx.set_role(constants.USER)
-                ctx.set_password()
-            user = ctx.user
+            with UserSaver() as saver:
+                saver.set_username(flask.request.form.get('username'))
+                saver.set_email(flask.request.form.get('email'))
+                saver.set_role(constants.USER)
+                saver.set_password()
+            user = saver.doc
         except ValueError as error:
             utils.flash_error(error)
             return flask.redirect(flask.url_for('.register'))
@@ -99,8 +99,8 @@ def reset():
         except KeyError:
             pass
         else:
-            with UserContext(user) as ctx:
-                ctx.set_password()
+            with UserSaver(user) as saver:
+                saver.set_password()
             send_password_code(user, 'password reset')
         utils.get_logger().info(f"reset user {user['username']}")
         utils.flash_message('An email has been sent if the user account exists.')
@@ -131,8 +131,8 @@ def password():
         except ValueError:
             utils.flash_error('too short password')
         else:
-            with UserContext(user) as ctx:
-                ctx.set_password(password)
+            with UserSaver(user) as saver:
+                saver.set_password(password)
             utils.get_logger().info(f"password user {user['username']}")
             do_login(username, password)
         return flask.redirect(flask.url_for('home'))
@@ -172,14 +172,14 @@ def edit(username):
                                      change_role=is_admin_and_not_self(user))
 
     elif utils.http_POST():
-        with UserContext(user) as ctx:
+        with UserSaver(user) as saver:
             email = flask.request.form.get('email')
             if email != user['email']:
-                ctx.set_email(enail)
+                saver.set_email(enail)
             if is_admin_and_not_self(user):
-                ctx.set_role(flask.request.form.get('role'))
+                saver.set_role(flask.request.form.get('role'))
             if flask.request.form.get('apikey'):
-                ctx.set_apikey()
+                saver.set_apikey()
         return flask.redirect(
             flask.url_for('.profile', username=user['username']))
 
@@ -228,9 +228,9 @@ def enable(username):
     if user is None:
         utils.flash_error('no such user')
         return flask.redirect(flask.url_for('home'))
-    with UserContext(user) as ctx:
-        ctx.set_status(constants.ENABLED)
-        ctx.set_password()
+    with UserSaver(user) as saver:
+        saver.set_status(constants.ENABLED)
+        saver.set_password()
     send_password_code(user, 'enabled')
     utils.get_logger().info(f"enabled user {username}")
     return flask.redirect(flask.url_for('.profile', username=username))
@@ -243,58 +243,47 @@ def disable(username):
     if user is None:
         utils.flash_error('no such user')
         return flask.redirect(flask.url_for('home'))
-    with UserContext(user) as ctx:
-        ctx.set_status(constants.DISABLED)
+    with UserSaver(user) as saver:
+        saver.set_status(constants.DISABLED)
     utils.get_logger().info(f"disabled user {username}")
     return flask.redirect(flask.url_for('.profile', username=username))
 
 
-class UserContext:
-    "Context for creating, modifying and saving a user account."
+class UserSaver(utils.BaseSaver):
+    "User document saver context."
 
-    def __init__(self, user=None):
-        if user is None:
-            if flask.current_app.config['USER_ENABLE_IMMEDIATELY']:
-                status = constants.ENABLED
-            else:
-                status = constants.PENDING
-            self.user = {'_id': utils.get_iuid(),
-                         'doctype': constants.DOCTYPE_USER,
-                         'status': status, 
-                         'created': utils.get_time()}
-            self.original = {}
+    DOCTYPE = constants.DOCTYPE_USER
+    HIDDEN_FIELDS = ['password']
+
+    def initialize(self):
+        "Set the status for a new user."
+        if flask.current_app.config['USER_ENABLE_IMMEDIATELY']:
+            self.doc['status'] = constants.ENABLED
         else:
-            self.user = user
-            self.original = user.copy()
+            self.doc['status'] = constants.PENDING
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, etyp, einst, etb):
-        if etyp is not None: return False
+    def finalize(self):
+        "Check that required fields have been set."
         for key in ['username', 'email', 'role', 'status']:
-            if not self.user.get(key):
+            if not self.doc.get(key):
                 raise ValueError("invalid user: %s not set" % key)
-        self.user['modified'] = utils.get_time()
-        flask.g.db.put(self.user)
-        utils.add_log(self.user, self.original, hide=['password'])
 
     def set_username(self, username):
-        if 'username' in self.user:
+        if 'username' in self.doc:
             raise ValueError('username cannot be changed')
         if not constants.NAME_RX.match(username):
-            raise ValueError('invalid username; must be an name')
+            raise ValueError('invalid username; must be a name')
         if get_user(username=username):
             raise ValueError('username already in use')
-        self.user['username'] = username
+        self.doc['username'] = username
 
     def set_email(self, email):
         if not constants.EMAIL_RX.match(email):
             raise ValueError('invalid email')
         if get_user(email=email):
             raise ValueError('email already in use')
-        self.user['email'] = email
-        if self.user.get('status') == constants.PENDING:
+        self.doc['email'] = email
+        if self.doc.get('status') == constants.PENDING:
             for rx in flask.current_app.config['USER_ENABLE_EMAIL_WHITELIST']:
                 if re.match(rx, email):
                     self.set_status(constants.ENABLED)
@@ -303,27 +292,28 @@ class UserContext:
     def set_status(self, status):
         if status not in constants.USER_STATUSES:
             raise ValueError('invalid status')
-        self.user['status'] = status
+        self.doc['status'] = status
 
     def set_role(self, role):
         if role not in constants.USER_ROLES:
             raise ValueError('invalid role')
-        self.user['role'] = role
+        self.doc['role'] = role
 
     def set_password(self, password=None):
         "Set the password; a one-time code if no password provided."
         config = flask.current_app.config
         if password is None:
-            self.user['password'] = "code:%s" % utils.get_iuid()
+            self.doc['password'] = "code:%s" % utils.get_iuid()
+            print('set_password', self.doc['password'])
         else:
             if len(password) < config['MIN_PASSWORD_LENGTH']:
                 raise ValueError('password too short')
-            self.user['password'] = werkzeug.security.generate_password_hash(
+            self.doc['password'] = werkzeug.security.generate_password_hash(
                 password, salt_length=config['SALT_LENGTH'])
 
     def set_apikey(self):
         "Set a new API key."
-        self.user['apikey'] = utils.get_iuid()
+        self.doc['apikey'] = utils.get_iuid()
 
 
 # Utility functions
