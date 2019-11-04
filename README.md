@@ -1,4 +1,4 @@
-# webapp-flask-couchdb
+# webapp-flask-couchdb-template
 
 A template for a web app based on Flask and CouchDB with user account handling.
 
