@@ -2,11 +2,12 @@
 
 import re
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 class Constants:
-    VERSION    = __version__
-    SOURCE_URL = 'https://github.com/pekrau/webapp-flask-couchdb-template'
+    VERSION     = __version__
+    SOURCE_NAME = 'webapp'
+    SOURCE_URL  = 'https://github.com/pekrau/webapp-flask-couchdb-template'
 
     BOOTSTRAP_VERSION  = '4.3.1'
     JQUERY_VERSION     = '3.3.1'
