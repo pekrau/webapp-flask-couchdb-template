@@ -176,7 +176,7 @@ def edit(username):
             if flask.g.is_admin:
                 email = flask.request.form.get('email')
                 if email != user['email']:
-                    saver.set_email(enail)
+                    saver.set_email(email)
             if is_admin_and_not_self(user):
                 saver.set_role(flask.request.form.get('role'))
             if flask.request.form.get('apikey'):
