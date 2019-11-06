@@ -167,3 +167,7 @@ def about_software():
 @blueprint.route('/user')
 def user():
     return flask.jsonify(USER)
+
+@blueprint.route('/users')
+def users():
+    return flask.jsonify(USERS)

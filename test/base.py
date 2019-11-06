@@ -75,25 +75,21 @@ class Base(unittest.TestCase):
             return self._root
 
     def check_schema(self, response):
-        """If there is a schema linked in the response headers,
-        check that the response JSON data matches that schema.
+        """Check that the response JSON data matches the schema
+        linked to in the response header.
         Return the response JSON.
         """
         self.assertEqual(response.status_code, http.client.OK)
         result = response.json()
+        url = response.links['schema']['url']
         try:
-            url = response.links['schema']['url']
+            schema = self.schemas[url]
         except KeyError:
-            pass
-        else:
-            try:
-                schema = self.schemas[url]
-            except KeyError:
-                r = self.session.get(url)
-                self.assertEqual(r.status_code, http.client.OK)
-                schema = r.json()
-                self.schemas[url] = schema
-            self.validate_schema(result, schema)
+            r = self.session.get(url)
+            self.assertEqual(r.status_code, http.client.OK)
+            schema = r.json()
+            self.schemas[url] = schema
+        self.validate_schema(result, schema)
         return result
 
     def validate_schema(self, instance, schema):
