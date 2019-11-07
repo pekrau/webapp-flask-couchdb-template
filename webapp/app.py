@@ -5,6 +5,7 @@ import flask
 import webapp.about
 import webapp.config
 import webapp.user
+import webapp.site
 
 import webapp.api.about
 import webapp.api.root
@@ -62,6 +63,7 @@ def home():
 # Set up the URL map.
 app.register_blueprint(webapp.about.blueprint, url_prefix='/about')
 app.register_blueprint(webapp.user.blueprint, url_prefix='/user')
+app.register_blueprint(webapp.site.blueprint, url_prefix='/site')
 
 app.register_blueprint(webapp.api.root.blueprint, url_prefix='/api')
 app.register_blueprint(webapp.api.about.blueprint, url_prefix='/api/about')
