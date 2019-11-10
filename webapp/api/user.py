@@ -1,4 +1,4 @@
-"User profile API endpoints."
+"User display API endpoints."
 
 import http.client
 
@@ -17,7 +17,7 @@ def all():
                          schema_url=utils.url_for('api_schema.users'))
 
 @blueprint.route('/<name:username>')
-def profile(username):
+def display(username):
     user = webapp.user.get_user(username=username)
     if not user:
         flask.abort(http.client.NOT_FOUND)
@@ -43,4 +43,4 @@ def logs(username):
 def get_user_basic(user):
     "Return the basic JSON data for a user."
     return {'username': user['username'],
-            'href': utils.url_for('.profile',username=user['username'])}
+            'href': utils.url_for('.display',username=user['username'])}
