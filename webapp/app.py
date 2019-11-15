@@ -14,7 +14,6 @@ import webapp.api.user
 from webapp import constants
 from webapp import utils
 
-
 app = flask.Flask(__name__)
 
 # Add URL map converters.
@@ -38,8 +37,12 @@ def setup_template_context():
 
 @app.before_first_request
 def init_database():
-    flask.g.db = utils.get_db()
-    utils.update_designs()
+    db = utils.get_db()
+    logger = utils.get_logger()
+    if db.put_design('logs', utils.LOGS_DESIGN_DOC):
+        logger.info('Updated logs design document.')
+    if db.put_design('users', webapp.user.USERS_DESIGN_DOC):
+        logger.info('Updated users design document.')
 
 @app.before_request
 def prepare():

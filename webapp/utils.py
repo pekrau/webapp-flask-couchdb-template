@@ -15,6 +15,11 @@ import werkzeug.routing
 
 from . import constants
 
+LOGS_DESIGN_DOC = {
+    'views': {
+        'doc': {'map': "function(doc) {if (doc.doctype !== 'log') return; emit([doc.docid, doc.timestamp], null);}"}
+    },
+}
 
 # Global logger instance.
 _logger = None
@@ -242,26 +247,3 @@ def get_logs(docid):
         for key in ['_id', '_rev', 'doctype', 'docid']:
             log.pop(key)
     return result
-
-DESIGNS = {
-    'users': {
-        'views': {
-            'username': {'map': "function(doc) {if (doc.doctype !== 'user') return; emit(doc.username, null);}"},
-            'email': {'map': "function(doc) {if (doc.doctype !== 'user') return;  emit(doc.email, null);}"},
-            'apikey': {'map': "function(doc) {if (doc.doctype !== 'user') return;  emit(doc.apikey, null);}"},
-            'role': {'map': "function(doc) {if (doc.doctype !== 'user') return;  emit(doc.role, null);}"},
-        }
-    },
-    'logs': {
-        'views': {
-            'doc': {'map': "function (doc) {if (doc.doctype !== 'log') return; emit([doc.docid, doc.timestamp], null);}"}
-        }
-    }
-}
-
-def update_designs():
-    "Update the CouchDB database design document (view indices)."
-    logger = get_logger()
-    for name, doc in DESIGNS.items():
-        if flask.g.db.put_design(name, doc):
-            logger.info(f"Updated design document '{name}'.")
