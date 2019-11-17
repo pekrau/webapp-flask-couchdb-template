@@ -38,7 +38,7 @@ it is a template, but it won't do anything useful.
    Edit it to fit your site.
    If your email server is not the simple `localhost` with no password,
    then you need to set those variables. See the file
-   `<your-repo-dir>/webapp/\_\_init\_\_.py` for all email-related settings
+   `<your-repo-dir>/webapp/__init__.py` for all email-related settings
    variables.
 
 7. Set up the CouchDB database that your app will use, and add the name of
