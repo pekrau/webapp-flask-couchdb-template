@@ -12,7 +12,14 @@ from . import constants
 from . import utils
 from .saver import BaseSaver
 
-USERS_DESIGN_DOC = {
+def init(app):
+    "Initialize; update CouchDB design document."
+    db = utils.get_db(app=app)
+    logger = utils.get_logger(app)
+    if db.put_design('users', DESIGN_DOC):
+        logger.info('Updated users design document.')
+
+DESIGN_DOC = {
     'views': {
         'username': {'map': "function(doc) {if (doc.doctype !== 'user') return; emit(doc.username, null);}"},
         'email': {'map': "function(doc) {if (doc.doctype !== 'user') return;  emit(doc.email, null);}"},

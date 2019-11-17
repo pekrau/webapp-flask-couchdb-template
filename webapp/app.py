@@ -6,11 +6,14 @@ import webapp.about
 import webapp.config
 import webapp.user
 import webapp.site
+# To be developed.
+# import webapp.entity
 
 import webapp.api.about
 import webapp.api.root
 import webapp.api.schema
 import webapp.api.user
+
 from webapp import constants
 from webapp import utils
 
@@ -20,13 +23,12 @@ app = flask.Flask(__name__)
 app.url_map.converters['name'] = utils.NameConverter
 app.url_map.converters['iuid'] = utils.IuidConverter
 
-# Get the configuration.
+# Get the configuration and initialize modules (database).
 webapp.config.init(app)
-
-# Init the mail handler.
+utils.init(app)
+webapp.user.init(app)
 utils.mail.init_app(app)
 
-# Add template filters.
 app.add_template_filter(utils.thousands)
 
 @app.context_processor
@@ -34,15 +36,6 @@ def setup_template_context():
     "Add useful stuff to the global context of Jinja2 templates."
     return dict(constants=constants,
                 csrf_token=utils.csrf_token)
-
-@app.before_first_request
-def init_database():
-    db = utils.get_db()
-    logger = utils.get_logger()
-    if db.put_design('logs', utils.LOGS_DESIGN_DOC):
-        logger.info('Updated logs design document.')
-    if db.put_design('users', webapp.user.USERS_DESIGN_DOC):
-        logger.info('Updated users design document.')
 
 @app.before_request
 def prepare():
@@ -67,6 +60,7 @@ def home():
 app.register_blueprint(webapp.about.blueprint, url_prefix='/about')
 app.register_blueprint(webapp.user.blueprint, url_prefix='/user')
 app.register_blueprint(webapp.site.blueprint, url_prefix='/site')
+# app.register_blueprint(webapp.entity.blueprint, url_prefix='/entity')
 
 app.register_blueprint(webapp.api.root.blueprint, url_prefix='/api')
 app.register_blueprint(webapp.api.about.blueprint, url_prefix='/api/about')
