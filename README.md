@@ -45,8 +45,16 @@ it is a template, but it won't do anything useful.
    it, any required username and password for it, in your `settings.json`
    file.
 
-8. Run the Flask app in development mode as usual `python app.py`.
+8. Include the directory `{your-repo-dir}` in the Python path. This
+   can be done in different ways. The simplest is to set it in the shell
+   (e.g. in your .bashrc file):
+   ```
+   $ cd {your-repo-dir}
+   $ export PYTHONPATH=$PWD:$PYTHONPATH
+   ```
 
-9. If you wish to run the Flask app in production mode, see the Flask
+9. Run the Flask app in development mode as usual `python app.py`.
+
+10. If you wish to run the Flask app in production mode, see the Flask
    manual or the Apache, nginx, or whichever outward-facing web server you
    are using for information.
