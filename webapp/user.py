@@ -321,7 +321,6 @@ class UserSaver(BaseSaver):
         config = flask.current_app.config
         if password is None:
             self.doc['password'] = "code:%s" % utils.get_iuid()
-            print('set_password', self.doc['password'])
         else:
             if len(password) < config['MIN_PASSWORD_LENGTH']:
                 raise ValueError('password too short')
@@ -342,19 +341,18 @@ def get_user(username=None, email=None, apikey=None):
     if username:
         rows = flask.g.db.view('users', 'username', 
                                key=username, include_docs=True)
-        if len(rows) == 1:
-            return rows[0].doc
-    if email:
+    elif email:
         rows = flask.g.db.view('users', 'email',
                                key=email, include_docs=True)
-        if len(rows) == 1:
-            return rows[0].doc
-    if apikey:
+    elif apikey:
         rows = flask.g.db.view('users', 'apikey', 
                                key=apikey, include_docs=True)
-        if len(rows) == 1:
-            return rows[0].doc
-    return None
+    else:
+        return None
+    if len(rows) == 1:
+        return rows[0].doc
+    else:
+        return None
 
 def get_users(role, status=None):
     "Get the users specified by role and optionally by status."

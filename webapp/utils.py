@@ -57,7 +57,7 @@ def get_logger(app=None):
     return _logger
 
 def log_access(response):
-    "Record access in the log."
+    "Record access using the logger."
     if flask.g.current_user:
         username = flask.g.current_user['username']
     else:
