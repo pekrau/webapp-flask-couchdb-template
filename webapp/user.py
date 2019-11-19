@@ -234,7 +234,7 @@ def logs(username):
 @utils.admin_required
 def all():
     "Display list of all users."
-    users = get_users(role=None)
+    users = get_users()
     return flask.render_template('user/all.html', users=users)
 
 @blueprint.route('/enable/<name:username>', methods=['POST'])
@@ -354,8 +354,8 @@ def get_user(username=None, email=None, apikey=None):
     else:
         return None
 
-def get_users(role, status=None):
-    "Get the users specified by role and optionally by status."
+def get_users(role=None, status=None):
+    "Get the users optionally specified by role and status."
     assert role is None or role in constants.USER_ROLES
     assert status is None or status in constants.USER_STATUSES
     if role is None:
