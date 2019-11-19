@@ -204,6 +204,8 @@ def edit(username):
         if not is_empty(user):
             utils.flash_error('cannot delete non-empty user account')
             return flask.redirect(flask.url_for('.display', username=username))
+        for log in utils.get_logs(user['_id'], cleanup=False):
+            flask.g.db.delete(log)
         flask.g.db.delete(user)
         utils.flash_message(f"Deleted user {username}.")
         utils.get_logger().info(f"deleted user {username}")

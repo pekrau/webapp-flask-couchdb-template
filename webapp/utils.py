@@ -243,7 +243,7 @@ def get_db(dbserver=None, app=None):
         dbserver = get_dbserver(app=app)
     return dbserver[app.config['COUCHDB_DBNAME']]
 
-def get_logs(docid):
+def get_logs(docid, cleanup=True):
     """Return the list of log entries for the given document identifier,
     sorted by reverse timestamp.
     """
@@ -252,8 +252,8 @@ def get_logs(docid):
                                              endkey=[docid],
                                              descending=True,
                                              include_docs=True)]
-    # Remove irrelevant entries.
-    for log in result:
-        for key in ['_id', '_rev', 'doctype', 'docid']:
-            log.pop(key)
+    if cleanup:
+        for log in result:
+            for key in ['_id', '_rev', 'doctype', 'docid']:
+                log.pop(key)
     return result
