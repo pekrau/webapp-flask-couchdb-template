@@ -16,7 +16,14 @@ import werkzeug.routing
 from . import constants
 
 def init(app):
-    "Initialize; update CouchDB design document."
+    """Initialize app.
+    - Add URL map converters.
+    - Add template filters.
+    - Update CouchDB design document.
+    """
+    app.url_map.converters['name'] = NameConverter
+    app.url_map.converters['iuid'] = IuidConverter
+    app.add_template_filter(thousands)
     db = get_db(app=app)
     logger = get_logger(app)
     if db.put_design('logs', DESIGN_DOC):
@@ -257,3 +264,22 @@ def get_logs(docid, cleanup=True):
             for key in ['_id', '_rev', 'doctype', 'docid']:
                 log.pop(key)
     return result
+
+
+class JsonException(Exception):
+    "JSON API error response."
+
+    status_code = 400
+
+    def __init__(self, message, status_code=None, data=None):
+        super().__init__()
+        self.message = str(message)
+        if status_code is not None:
+            self.status_code = status_code
+        self.data = data
+
+    def to_dict(self):
+        result = dict(self.data or ())
+        result["status_code"] = self.status_code
+        result["message"] = self.message
+        return result

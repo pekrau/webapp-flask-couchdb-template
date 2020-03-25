@@ -19,17 +19,18 @@ from webapp import utils
 
 app = flask.Flask(__name__)
 
-# Add URL map converters.
-app.url_map.converters['name'] = utils.NameConverter
-app.url_map.converters['iuid'] = utils.IuidConverter
-
 # Get the configuration and initialize modules (database).
 webapp.config.init(app)
 utils.init(app)
 webapp.user.init(app)
 utils.mail.init_app(app)
 
-app.add_template_filter(utils.thousands)
+
+@app.errorhandler(utils.JsonException)
+def handle_json_exception(error):
+    response = flask.jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
 
 @app.context_processor
 def setup_template_context():
