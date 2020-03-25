@@ -51,7 +51,7 @@ def login():
             else:
                 return flask.redirect(next)
         except ValueError:
-            utils.flash_error('invalid user/password, or account disabled')
+            utils.flash_error('invalid user or password, or account disabled')
             return flask.redirect(flask.url_for('.login'))
 
 @blueprint.route('/logout', methods=['POST'])
@@ -104,8 +104,9 @@ def register():
 def reset():
     "Reset the password for a user account and send email."
     if utils.http_GET():
-        return flask.render_template('user/reset.html',
-                                     email=flask.request.args.get('email') or '')
+        email = flask.request.args.get('email') or ''
+        email = email.lower()
+        return flask.render_template('user/reset.html', email=email)
 
     elif utils.http_POST():
         try:
@@ -133,19 +134,23 @@ def password():
 
     elif utils.http_POST():
         try:
-            username = flask.request.form['username']
-            if not username: raise KeyError
+            username = flask.request.form.get('username') or ''
+            code = flask.request.form.get('code') or ''
+            if not username:
+                raise ValueError('No such user or wrong code.')
             user = get_user(username=username)
-            if user is None: raise KeyError
-            if user['password'] != "code:{}".format(flask.request.form['code']):
-                raise KeyError
+            if user is None:
+                raise ValueError('No such user or wrong code.')
+            if user['password'] != f"code:{code}":
+                raise ValueError('No such user or wrong code.')
             password = flask.request.form.get('password') or ''
             if len(password) < flask.current_app.config['MIN_PASSWORD_LENGTH']:
-                raise ValueError
-        except KeyError:
-            utils.flash_error('no such user or wrong code')
-        except ValueError:
-            utils.flash_error('too short password')
+                raise ValueError('Too short password.')
+        except ValueError as error:
+            utils.flash_error(str(error))
+            return flask.redirect(flask.url_for('.password',
+                                                username=username,
+                                                code=code))
         else:
             with UserSaver(user) as saver:
                 saver.set_password(password)
@@ -297,6 +302,7 @@ class UserSaver(BaseSaver):
         self.doc['username'] = username
 
     def set_email(self, email):
+        email = email.lower()
         if not constants.EMAIL_RX.match(email):
             raise ValueError('invalid email')
         if get_user(email=email):
@@ -345,7 +351,7 @@ def get_user(username=None, email=None, apikey=None):
                                key=username, include_docs=True)
     elif email:
         rows = flask.g.db.view('users', 'email',
-                               key=email, include_docs=True)
+                               key=email.lower(), include_docs=True)
     elif apikey:
         rows = flask.g.db.view('users', 'apikey', 
                                key=apikey, include_docs=True)
