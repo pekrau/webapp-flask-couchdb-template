@@ -45,30 +45,31 @@ def prepare():
     flask.g.db = utils.get_db(dbserver=flask.g.dbserver)
     flask.g.current_user = webapp.user.get_current_user()
     flask.g.is_admin = flask.g.current_user and \
-                       flask.g.current_user['role'] == constants.ADMIN
+                       flask.g.current_user["role"] == constants.ADMIN
 
 app.after_request(utils.log_access)
 
-@app.route('/')
+@app.route("/")
 def home():
     "Home page. Redirect to API root if JSON is accepted."
     if utils.accept_json():
-        return flask.redirect(flask.url_for('api_root'))
+        return flask.redirect(flask.url_for("api_root"))
     else:
-        return flask.render_template('home.html')
+        return flask.render_template("home.html")
 
 # Set up the URL map.
-app.register_blueprint(webapp.about.blueprint, url_prefix='/about')
-app.register_blueprint(webapp.user.blueprint, url_prefix='/user')
-app.register_blueprint(webapp.site.blueprint, url_prefix='/site')
-# app.register_blueprint(webapp.entity.blueprint, url_prefix='/entity')
+app.register_blueprint(webapp.about.blueprint, url_prefix="/about")
+app.register_blueprint(webapp.user.blueprint, url_prefix="/user")
+app.register_blueprint(webapp.site.blueprint, url_prefix="/site")
+# To be developed.
+# app.register_blueprint(webapp.entity.blueprint, url_prefix="/entity")
 
-app.register_blueprint(webapp.api.root.blueprint, url_prefix='/api')
-app.register_blueprint(webapp.api.about.blueprint, url_prefix='/api/about')
-app.register_blueprint(webapp.api.schema.blueprint, url_prefix='/api/schema')
-app.register_blueprint(webapp.api.user.blueprint, url_prefix='/api/user')
+app.register_blueprint(webapp.api.root.blueprint, url_prefix="/api")
+app.register_blueprint(webapp.api.about.blueprint, url_prefix="/api/about")
+app.register_blueprint(webapp.api.schema.blueprint, url_prefix="/api/schema")
+app.register_blueprint(webapp.api.user.blueprint, url_prefix="/api/user")
 
 
 # This code is used only during development.
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()
