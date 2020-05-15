@@ -53,8 +53,15 @@ it is a template, but it won't do anything useful.
    $ export PYTHONPATH=$PWD:$PYTHONPATH
    ```
 
-9. Run the Flask app in development mode as usual `python app.py`.
+9. Use the command-line interface to create an admin user account.
+   This will also automatically load the index definitions to
+   the CouchDB server.
+   ```
+   $ python cli.py -A
+   ```
 
-10. If you wish to run the Flask app in production mode, see the Flask
+10. Run the Flask app in development mode as usual `python app.py`.
+
+11. If you wish to run the Flask app in production mode, see the Flask
    manual or the Apache, nginx, or whichever outward-facing web server you
    are using for information.
