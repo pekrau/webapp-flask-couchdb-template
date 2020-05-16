@@ -44,7 +44,7 @@ def prepare():
     flask.g.dbserver = utils.get_dbserver()
     flask.g.db = utils.get_db(dbserver=flask.g.dbserver)
     flask.g.current_user = webapp.user.get_current_user()
-    flask.g.is_admin = flask.g.current_user and \
+    flask.g.am_admin = flask.g.current_user and \
                        flask.g.current_user["role"] == constants.ADMIN
 
 app.after_request(utils.log_access)
