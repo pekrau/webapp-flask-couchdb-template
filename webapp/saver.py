@@ -92,6 +92,7 @@ class BaseSaver:
                  "updated": updated,
                  "removed": removed,
                  "timestamp": utils.get_time()}
+        entry.update(self.add_log_items())
         if hasattr(flask.g, "current_user") and flask.g.current_user:
             entry["username"] = flask.g.current_user["username"]
         else:
@@ -103,6 +104,10 @@ class BaseSaver:
             entry["remote_addr"] = None
             entry["user_agent"] = None
         flask.g.db.put(entry)
+
+    def add_log_items(self):
+        "Return a dictionary of additional items to add to the log entry."
+        return {}
 
 
 class AttachmentsSaver(BaseSaver):
@@ -133,3 +138,14 @@ class AttachmentsSaver(BaseSaver):
 
     def delete_attachment(self, filename):
         self._delete_attachments.add(filename)
+
+    def add_log_items(self):
+        "Return a dictionary of additional items to add to the log entry."
+        result = {}
+        if self._delete_attachments:
+            result["attachments_deleted"] = self._delete_attachments
+        if self._add_attachments:
+            for att in self._add_attachments:
+                att["size"] = len(att.pop("content"))
+            result["attachments_added"] = self._add_attachments
+        return result
