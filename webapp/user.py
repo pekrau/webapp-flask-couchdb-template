@@ -18,6 +18,19 @@ def init(app):
     logger = utils.get_logger(app)
     if db.put_design("users", DESIGN_DOC):
         logger.info("Updated users design document.")
+    if app.config["ADMIN_USER"]:
+        with app.app_context():
+            flask.g.db = db
+            user = get_user(username=app.config["ADMIN_USER"]["username"])
+            if user is None:
+                with UserSaver() as saver:
+                    saver.set_username(app.config["ADMIN_USER"]["username"])
+                    saver.set_email(app.config["ADMIN_USER"]["email"])
+                    saver.set_role(constants.ADMIN)
+                    saver.set_status(constants.ENABLED)
+                    saver.set_password(app.config["ADMIN_USER"]["password"])
+            logger.info("Created admin user " +
+                        app.config["ADMIN_USER"]["username"])
 
 DESIGN_DOC = {
     "views": {
