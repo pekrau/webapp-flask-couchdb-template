@@ -34,7 +34,7 @@ it is a template, but it won't do anything useful.
    
 6. Create your JSON file `settings.json` in either the directory
    `{your-repo-dir}/site` or `{your-repo-dir}/webapp` by
-   making a copy of `{your-repo-dir}/site/example_settings.json`
+   making a copy of `{your-repo-dir}/webapp/example_settings.json`
    Edit it to fit your site.
    If your email server is not the simple `localhost` with no password,
    then you need to set those variables. See the file
