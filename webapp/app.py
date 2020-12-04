@@ -61,7 +61,7 @@ def home():
 @utils.admin_required
 def debug():
     "Return some debug info for admin."
-    result = [f"<h1>Debug  {constants.VERSION}</h2>"]
+    result = [f"<h1>Debug {constants.VERSION}</h2>"]
     result.append("<h2>headers</h2>")
     result.append("<table>")
     for key, value in sorted(flask.request.headers.items()):
