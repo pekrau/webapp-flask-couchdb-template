@@ -21,7 +21,7 @@ def init(app):
     - Add template filters.
     - Update CouchDB design document.
     """
-    app.url_map.converters["name"] = NameConverter
+    app.url_map.converters["identifier"] = IdentifierConverter
     app.url_map.converters["iuid"] = IuidConverter
     app.add_template_filter(thousands)
     db = get_db(app=app)
@@ -105,6 +105,7 @@ class IdentifierConverter(werkzeug.routing.BaseConverter):
     def to_python(self, value):
         if not constants.ID_RX.match(value):
             raise werkzeug.routing.ValidationError
+        return value
 
 class IuidConverter(werkzeug.routing.BaseConverter):
     "URL route converter for a IUID."
@@ -144,10 +145,6 @@ def get_time(offset=None):
         instant += datetime.timedelta(seconds=offset)
     instant = instant.isoformat()
     return instant[:17] + "{:06.3f}".format(float(instant[17:])) + "Z"
-
-def url_for(endpoint, **values):
-    "Same as 'flask.url_for', but with '_external' set to True."
-    return flask.url_for(endpoint, _external=True, **values)
 
 def http_GET():
     "Is the HTTP method GET?"

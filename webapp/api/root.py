@@ -14,27 +14,31 @@ def root():
     "API root."
     items = {
         "schema": {
-            "root": {"href": utils.url_for("api_schema.root")},
-            "logs": {"href": utils.url_for("api_schema.logs")},
-            "user": {"href": utils.url_for("api_schema.user")},
-            "users": {"href": utils.url_for("api_schema.users")},
+            "root": {"href": flask.url_for("api_schema.root", _external=True)},
+            "logs": {"href": flask.url_for("api_schema.logs", _external=True)},
+            "user": {"href": flask.url_for("api_schema.user", _external=True)},
+            "users": {"href": flask.url_for("api_schema.users",_external=True)},
             "about/software": {
-                "href": utils.url_for("api_schema.about_software")
+                "href": flask.url_for("api_schema.about_software",
+                                      _external=True)
             }
         },
         "about": {
-            "software": {"href": utils.url_for("api_about.software")}
+            "software": {"href": flask.url_for("api_about.software",
+                                               _external=true)}
         }
     }
     if flask.g.current_user:
         items["user"] = {
             "username": flask.g.current_user["username"],
-            "href": utils.url_for("api_user.display",
-                                  username=flask.g.current_user["username"])
+            "href": flask.url_for("api_user.display",
+                                  username=flask.g.current_user["username"],
+                                  _external=True)
         }
     if flask.g.am_admin:
         items["users"] = {
-            "href": utils.url_for("api_user.all")
+            "href": flask.url_for("api_user.all", _external=True)
         }
     return utils.jsonify(utils.get_json(**items),
-                         schema_url=utils.url_for("api_schema.root"))
+                         schema_url=flask.url_for("api_schema.root",
+                                                  _external=True))
