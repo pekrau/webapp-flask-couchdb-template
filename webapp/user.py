@@ -1,8 +1,8 @@
 "User display and login/logout HTMl endpoints."
 
+import fnmatch
 import http.client
 import json
-import re
 
 import flask
 import flask_mail
@@ -21,7 +21,7 @@ def init(app):
 
 DESIGN_DOC = {
     "views": {
-        "username": {"map": "function(doc) {if (doc.doctype !== 'user') return; emit(doc.username, null);}"},
+        "username": {"map": "function(doc) {if (doc.doctype !== 'user') return; emit(doc.username.toLowerCase(), null);}"},
         "email": {"map": "function(doc) {if (doc.doctype !== 'user') return;  emit(doc.email, null);}"},
         "apikey": {"map": "function(doc) {if (doc.doctype !== 'user') return;  emit(doc.apikey, null);}"},
         "role": {"map": "function(doc) {if (doc.doctype !== 'user') return;  emit(doc.role, null);}"},
@@ -33,29 +33,11 @@ blueprint = flask.Blueprint("user", __name__)
 @blueprint.route("/login", methods=["GET", "POST"])
 def login():
     """Login to a user account.
-    Creates the admin user specified in the settings.json, if not done.
     """
-    app = flask.current_app
-    if app.config.get("ADMIN_USER"):
-        user = get_user(username=app.config["ADMIN_USER"]["username"])
-        if user is None:
-            try:
-                with UserSaver() as saver:
-                    saver.set_username(app.config["ADMIN_USER"]["username"])
-                    saver.set_email(app.config["ADMIN_USER"]["email"])
-                    saver.set_role(constants.ADMIN)
-                    saver.set_status(constants.ENABLED)
-                    saver.set_password(app.config["ADMIN_USER"]["password"])
-                utils.get_logger().info("Created admin user " +
-                                        app.config["ADMIN_USER"]["username"])
-            except ValueError as error:
-                utils.get_logger().error("Could not create admin user;"
-                                         " misconfiguration.")
-
     if utils.http_GET():
         return flask.render_template("user/login.html",
                                      next=flask.request.args.get("next"))
-    if utils.http_POST():
+    elif utils.http_POST():
         username = flask.request.form.get("username")
         password = flask.request.form.get("password")
         try:
@@ -199,7 +181,7 @@ def password():
                 user = get_user(username=username)
                 if user is None: raise ValueError
                 if flask.g.am_admin and \
-                   flask.g.current_user["username"] != username:
+                   flask.g.current_user["username"].lower() != username.lower():
                     pass        # No check for either code or current password.
                 elif flask.current_app.config["MAIL_SERVER"]:
                     code = flask.request.form.get("code") or ""
@@ -324,7 +306,7 @@ def enable(username):
     if user is None:
         utils.flash_error("No such user.")
         return flask.redirect(flask.url_for("home"))
-    if user["username"] == flask.g.current_user["username"]:
+    if user["username"].lower() == flask.g.current_user["username"].lower():
         utils.flash_error("You cannot enable yourself.")
         return flask.redirect(flask.url_for("home"))
     with UserSaver(user) as saver:
@@ -343,7 +325,7 @@ def disable(username):
     if user is None:
         utils.flash_error("No such user.")
         return flask.redirect(flask.url_for("home"))
-    if user["username"] == flask.g.current_user["username"]:
+    if user["username"].lower() == flask.g.current_user["username"].lower():
         utils.flash_error("You cannot disable yourself.")
         return flask.redirect(flask.url_for("home"))
     with UserSaver(user) as saver:
@@ -375,8 +357,8 @@ class UserSaver(BaseSaver):
         "Username can be set only when creating the account."
         if "username" in self.doc:
             raise ValueError("username cannot be changed")
-        if not constants.NAME_RX.match(username):
-            raise ValueError("invalid username; must be a name")
+        if not constants.ID_RX.match(username):
+            raise ValueError("invalid username; must be an identifier")
         if get_user(username=username):
             raise ValueError("username already in use")
         self.doc["username"] = username
@@ -389,8 +371,8 @@ class UserSaver(BaseSaver):
             raise ValueError("email already in use")
         self.doc["email"] = email
         if self.doc.get("status") == constants.PENDING:
-            for rx in flask.current_app.config["USER_ENABLE_EMAIL_WHITELIST"]:
-                if re.match(rx, email):
+            for expr in flask.current_app.config["USER_ENABLE_EMAIL_WHITELIST"]:
+                if fnmatch.fnmatch(email, expr):
                     self.set_status(constants.ENABLED)
                     break
 
@@ -428,7 +410,7 @@ def get_user(username=None, email=None, apikey=None):
     """
     if username:
         rows = flask.g.db.view("users", "username", 
-                               key=username, include_docs=True)
+                               key=username.lower(), include_docs=True)
     elif email:
         rows = flask.g.db.view("users", "email",
                                key=email.lower(), include_docs=True)
@@ -477,7 +459,7 @@ def do_login(username, password):
         raise ValueError
     if user["status"] != constants.ENABLED:
         raise ValueError
-    flask.session["username"] = user["username"]
+    flask.session["username"] = user["username"].lower()
     flask.session.permanent = True
     utils.get_logger().info(f"logged in {user['username']}")
 
@@ -501,10 +483,10 @@ def am_admin_or_self(user):
     "Is the current user admin, or the same as the given user?"
     if not flask.g.current_user: return False
     if flask.g.am_admin: return True
-    return flask.g.current_user["username"] == user["username"]
+    return flask.g.current_user["username"].lower() == user["username"].lower()
 
 def am_admin_and_not_self(user):
     "Is the current user admin, but not the same as the given user?"
     if flask.g.am_admin:
-        return flask.g.current_user["username"] != user["username"]
+        return flask.g.current_user["username"].lower() != user["username"].lower()
     return False
