@@ -61,7 +61,7 @@ def home():
 @utils.admin_required
 def debug():
     "Return some debug info for admin."
-    result = [f"<h1>Debug  {constants.VERSION}</h2>"]
+    result = [f"<h1>Debug {constants.VERSION}</h2>"]
     result.append("<h2>headers</h2>")
     result.append("<table>")
     for key, value in sorted(flask.request.headers.items()):
@@ -89,5 +89,4 @@ app.register_blueprint(webapp.api.user.blueprint, url_prefix="/api/user")
 
 # This code is used only during development.
 if __name__ == "__main__":
-    app.run(host=app.config["SERVER_HOST"],
-            port=app.config["SERVER_PORT"])
+    app.run()
