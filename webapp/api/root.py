@@ -25,7 +25,7 @@ def root():
         },
         "about": {
             "software": {"href": flask.url_for("api_about.software",
-                                               _external=true)}
+                                               _external=True)}
         }
     }
     if flask.g.current_user:
