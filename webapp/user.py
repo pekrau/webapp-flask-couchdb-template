@@ -140,8 +140,7 @@ def register():
 def reset():
     "Reset the password for a user account and send email."
     if not flask.current_app.config["MAIL_SERVER"]:
-        return utils.error("Cannot reset password; no email server defined.",
-                           flask.url_for("home"))
+        return utils.error("Cannot reset password; no email server defined.")
         
     if utils.http_GET():
         email = flask.request.args.get("email") or ""
@@ -201,7 +200,9 @@ def password():
                 if password != flask.request.form.get("confirm_password"):
                     raise ValueError("Wrong password entered; confirm failed.")
         except ValueError as error:
-            return utils.error(error)
+            return utils.error(error, flask.url_for(".password",
+                                                    username=username,
+                                                    code=code))
         else:
             with UserSaver(user) as saver:
                 saver.set_password(password)
