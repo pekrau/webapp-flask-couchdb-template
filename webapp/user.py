@@ -395,7 +395,6 @@ def get_user(username=None, email=None, apikey=None):
     Return None if no such user.
     """
     if username:
-        print(username)
         rows = flask.g.db.view("users", "username", 
                                key=username.lower(), include_docs=True)
     elif email:
