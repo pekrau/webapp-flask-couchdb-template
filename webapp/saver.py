@@ -1,6 +1,8 @@
 "Base document saver context classes."
 
 import copy
+import os.path
+import sys
 
 import flask
 
@@ -102,7 +104,7 @@ class BaseSaver:
             entry["user_agent"] = str(flask.request.user_agent)
         else:
             entry["remote_addr"] = None
-            entry["user_agent"] = None
+            entry["user_agent"] = os.path.basename(sys.argv[0])
         flask.g.db.put(entry)
 
     def add_log_items(self):
