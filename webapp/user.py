@@ -324,7 +324,7 @@ class UserSaver(BaseSaver):
     "User document saver context."
 
     DOCTYPE = constants.DOCTYPE_USER
-    HIDDEN_FIELDS = ["password"]
+    HIDDEN_VALUE_PATHS = [["password"]]
 
     def initialize(self):
         "Set the status for a new user."
