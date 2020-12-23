@@ -3,6 +3,7 @@
 import datetime
 import functools
 import http.client
+import json
 import logging
 import time
 import uuid
@@ -24,6 +25,7 @@ def init(app):
     app.url_map.converters["identifier"] = IdentifierConverter
     app.url_map.converters["iuid"] = IuidConverter
     app.add_template_filter(thousands)
+    app.add_template_filter(tojson2)
     db = get_db(app=app)
     logger = get_logger(app)
     if db.put_design("logs", DESIGN_DOC):
@@ -213,6 +215,12 @@ def thousands(value):
         return "{:,}".format(value)
     else:
         return value
+
+def tojson2(value, indent=2):
+    """Transform to string JSON representation keeping single-quotes
+    and indenting by 2 by default.
+    """
+    return json.dumps(value, indent=indent)
 
 def accept_json():
     "Return True if the header Accept contains the JSON content type."
