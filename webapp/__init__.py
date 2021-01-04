@@ -2,7 +2,7 @@
 
 import re
 
-__version__ = "1.2.2"
+__version__ = "1.2.3"
 
 class Constants:
     VERSION     = __version__
@@ -40,7 +40,7 @@ class Constants:
     JSON_SCHEMA_URL = "http://json-schema.org/draft-07/schema#"
 
     def __setattr__(self, key, value):
-        raise ValueError("cannot set constant")
+        raise ValueError("Cannot set constant.")
 
 
 constants = Constants()
