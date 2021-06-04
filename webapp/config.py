@@ -10,12 +10,11 @@ ROOT_DIRPATH = os.path.dirname(os.path.abspath(__file__))
 
 # Default configurable values; modified by reading a JSON file in 'init'.
 DEFAULT_SETTINGS = dict(
-    SERVER_NAME = "127.0.0.1:5002",
+    SERVER_NAME = "127.0.0.1:5002",   # For URL generation; app.run() in devel.
     SITE_NAME = "webapp-couchdb",
     SITE_STATIC_DIRPATH = None,
     SITE_ICON = None,           # Filename, must be in 'SITE_STATIC_DIRPATH'
     SITE_LOGO = None,           # Filename, must be in 'SITE_STATIC_DIRPATH'
-    DEBUG = False,
     LOG_DEBUG = False,
     LOG_NAME = "webapp",
     LOG_FILEPATH = None,
@@ -68,8 +67,7 @@ def init(app):
             app.config["SETTINGS_FILE"] = filepath
             break
     # Modify the configuration from environment variables.
-    for key, convert in [("DEBUG", utils.to_bool),
-                         ("SECRET_KEY", str),
+    for key, convert in [("SECRET_KEY", str),
                          ("COUCHDB_URL", str),
                          ("COUCHDB_USERNAME", str),
                          ("COUCHDB_PASSWORD", str),
